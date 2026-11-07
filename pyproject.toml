@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tba-demo"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "cryptography>=42",
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.29",
+  "jinja2>=3.1",
+  "python-multipart>=0.0.9",
+  "segno>=1.6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "httpx>=0.27", "matplotlib>=3.8"]
+
+[tool.setuptools]
+packages = ["tba_core", "server", "evaluation"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
