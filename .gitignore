@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+*.sqlite3
+certs/
+results/*.pdf
+.pytest_cache/
+node_modules/
+.DS_Store
