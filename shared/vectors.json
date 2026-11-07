@@ -1,0 +1,151 @@
+{
+  "hmac_key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8",
+  "totp_key": "MTIzNDU2Nzg5MDEyMzQ1Njc4OTA",
+  "p256_public_key": "BNZreEfUaZkDt0p2XvgRWMF_2ue2xupXYi4wYQ7U7ggqVLRQuBYvaS2KuUbbms5zc6ucRsGaHHHIKVp6w8470Bk",
+  "transactions": [
+    {
+      "tx": {
+        "v": 1,
+        "tx_id": "3f2b8c1e-5a4d-4e7f-9b6a-1c2d3e4f5a6b",
+        "from": "0011223344",
+        "to": "0123456789",
+        "to_name": "TRAN THI B",
+        "amount": 1000000,
+        "currency": "VND",
+        "nonce": "AAECAwQFBgcICQoLDA0ODw",
+        "exp": 1800000120
+      },
+      "canonical": "{\"amount\":1000000,\"currency\":\"VND\",\"exp\":1800000120,\"from\":\"0011223344\",\"nonce\":\"AAECAwQFBgcICQoLDA0ODw\",\"to\":\"0123456789\",\"to_name\":\"TRAN THI B\",\"tx_id\":\"3f2b8c1e-5a4d-4e7f-9b6a-1c2d3e4f5a6b\",\"v\":1}",
+      "qr_payload": "tba1:eyJhbW91bnQiOjEwMDAwMDAsImN1cnJlbmN5IjoiVk5EIiwiZXhwIjoxODAwMDAwMTIwLCJmcm9tIjoiMDAxMTIyMzM0NCIsIm5vbmNlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EdyIsInRvIjoiMDEyMzQ1Njc4OSIsInRvX25hbWUiOiJUUkFOIFRISSBCIiwidHhfaWQiOiIzZjJiOGMxZS01YTRkLTRlN2YtOWI2YS0xYzJkM2U0ZjVhNmIiLCJ2IjoxfQ",
+      "hmac_otp_6": "649971",
+      "hmac_otp_8": "31649971",
+      "signature": "E8huCE8vUqrtWHh9tr9WgllADOpSaD8M0eY5E1b5xh0c-EkBCeIKQMZyLetENTCxuf7bbYQuqDnhgw72Px817A"
+    },
+    {
+      "tx": {
+        "v": 1,
+        "tx_id": "a1b2c3d4-0000-4000-8000-000000000001",
+        "from": "0011223344",
+        "to": "0999888777",
+        "to_name": "LE VAN M",
+        "amount": 9000000,
+        "currency": "VND",
+        "nonce": "8PHy8_T19vf4-fr7_P3-_w",
+        "exp": 1800000300
+      },
+      "canonical": "{\"amount\":9000000,\"currency\":\"VND\",\"exp\":1800000300,\"from\":\"0011223344\",\"nonce\":\"8PHy8_T19vf4-fr7_P3-_w\",\"to\":\"0999888777\",\"to_name\":\"LE VAN M\",\"tx_id\":\"a1b2c3d4-0000-4000-8000-000000000001\",\"v\":1}",
+      "qr_payload": "tba1:eyJhbW91bnQiOjkwMDAwMDAsImN1cnJlbmN5IjoiVk5EIiwiZXhwIjoxODAwMDAwMzAwLCJmcm9tIjoiMDAxMTIyMzM0NCIsIm5vbmNlIjoiOFBIeThfVDE5dmY0LWZyN19QMy1fdyIsInRvIjoiMDk5OTg4ODc3NyIsInRvX25hbWUiOiJMRSBWQU4gTSIsInR4X2lkIjoiYTFiMmMzZDQtMDAwMC00MDAwLTgwMDAtMDAwMDAwMDAwMDAxIiwidiI6MX0",
+      "hmac_otp_6": "777534",
+      "hmac_otp_8": "31777534",
+      "signature": "2OtITN2pTkphVTC1g4N6_3zpWLPJVFjI2eO1fGwcQRzDI-GleGr6aFzAShs9hKswtlXe3PD3KFXvRrRg0yEmIQ"
+    },
+    {
+      "tx": {
+        "v": 1,
+        "tx_id": "a1b2c3d4-0000-4000-8000-000000000002",
+        "from": "0123456789",
+        "to": "0011223344",
+        "to_name": "NGUYEN VAN A",
+        "amount": 9007199254740991,
+        "currency": "VND",
+        "nonce": "_____________________w",
+        "exp": 9007199254740991
+      },
+      "canonical": "{\"amount\":9007199254740991,\"currency\":\"VND\",\"exp\":9007199254740991,\"from\":\"0123456789\",\"nonce\":\"_____________________w\",\"to\":\"0011223344\",\"to_name\":\"NGUYEN VAN A\",\"tx_id\":\"a1b2c3d4-0000-4000-8000-000000000002\",\"v\":1}",
+      "qr_payload": "tba1:eyJhbW91bnQiOjkwMDcxOTkyNTQ3NDA5OTEsImN1cnJlbmN5IjoiVk5EIiwiZXhwIjo5MDA3MTk5MjU0NzQwOTkxLCJmcm9tIjoiMDEyMzQ1Njc4OSIsIm5vbmNlIjoiX19fX19fX19fX19fX19fX19fX19fdyIsInRvIjoiMDAxMTIyMzM0NCIsInRvX25hbWUiOiJOR1VZRU4gVkFOIEEiLCJ0eF9pZCI6ImExYjJjM2Q0LTAwMDAtNDAwMC04MDAwLTAwMDAwMDAwMDAwMiIsInYiOjF9",
+      "hmac_otp_6": "284401",
+      "hmac_otp_8": "11284401",
+      "signature": "rPHWQXJ4Xq_AIzTAo4yZXqQkLkFiFx3YIl_4zs2OkxHGvDBkWFsQ_UctDySZYiYNOJ9nZ_BJSMma-wcmc12HFg"
+    }
+  ],
+  "totp": [
+    {
+      "t": 59,
+      "digits": 8,
+      "code": "94287082"
+    },
+    {
+      "t": 1111111109,
+      "digits": 8,
+      "code": "07081804"
+    },
+    {
+      "t": 1111111111,
+      "digits": 8,
+      "code": "14050471"
+    },
+    {
+      "t": 1234567890,
+      "digits": 8,
+      "code": "89005924"
+    },
+    {
+      "t": 2000000000,
+      "digits": 8,
+      "code": "69279037"
+    },
+    {
+      "t": 20000000000,
+      "digits": 8,
+      "code": "65353130"
+    }
+  ],
+  "invalid_qr_payloads": [
+    {
+      "name": "whitespace",
+      "payload": "tba1:eyJhbW91bnQiOiAxMDAwMDAwLCAiY3VycmVuY3kiOiAiVk5EIiwgImV4cCI6IDE4MDAwMDAxMjAsICJmcm9tIjogIjAwMTEyMjMzNDQiLCAibm9uY2UiOiAiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EdyIsICJ0byI6ICIwMTIzNDU2Nzg5IiwgInRvX25hbWUiOiAiVFJBTiBUSEkgQiIsICJ0eF9pZCI6ICIzZjJiOGMxZS01YTRkLTRlN2YtOWI2YS0xYzJkM2U0ZjVhNmIiLCAidiI6IDF9"
+    },
+    {
+      "name": "unsorted_keys",
+      "payload": "tba1:eyJ2IjoxLCJ0eF9pZCI6IjNmMmI4YzFlLTVhNGQtNGU3Zi05YjZhLTFjMmQzZTRmNWE2YiIsImZyb20iOiIwMDExMjIzMzQ0IiwidG8iOiIwMTIzNDU2Nzg5IiwidG9fbmFtZSI6IlRSQU4gVEhJIEIiLCJhbW91bnQiOjEwMDAwMDAsImN1cnJlbmN5IjoiVk5EIiwibm9uY2UiOiJBQUVDQXdRRkJnY0lDUW9MREEwT0R3IiwiZXhwIjoxODAwMDAwMTIwfQ"
+    },
+    {
+      "name": "float_amount",
+      "payload": "tba1:eyJhbW91bnQiOjEwMDAwMDAuMCwiY3VycmVuY3kiOiJWTkQiLCJleHAiOjE4MDAwMDAxMjAsImZyb20iOiIwMDExMjIzMzQ0Iiwibm9uY2UiOiJBQUVDQXdRRkJnY0lDUW9MREEwT0R3IiwidG8iOiIwMTIzNDU2Nzg5IiwidG9fbmFtZSI6IlRSQU4gVEhJIEIiLCJ0eF9pZCI6IjNmMmI4YzFlLTVhNGQtNGU3Zi05YjZhLTFjMmQzZTRmNWE2YiIsInYiOjF9"
+    },
+    {
+      "name": "duplicate_key",
+      "payload": "tba1:eyJhbW91bnQiOjEsImFtb3VudCI6MTAwMDAwMCwiY3VycmVuY3kiOiJWTkQiLCJleHAiOjE4MDAwMDAxMjAsImZyb20iOiIwMDExMjIzMzQ0Iiwibm9uY2UiOiJBQUVDQXdRRkJnY0lDUW9MREEwT0R3IiwidG8iOiIwMTIzNDU2Nzg5IiwidG9fbmFtZSI6IlRSQU4gVEhJIEIiLCJ0eF9pZCI6IjNmMmI4YzFlLTVhNGQtNGU3Zi05YjZhLTFjMmQzZTRmNWE2YiIsInYiOjF9"
+    },
+    {
+      "name": "nfd_name_utf8",
+      "payload": "tba1:eyJhbW91bnQiOjEwMDAwMDAsImN1cnJlbmN5IjoiVk5EIiwiZXhwIjoxODAwMDAwMTIwLCJmcm9tIjoiMDAxMTIyMzM0NCIsIm5vbmNlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EdyIsInRvIjoiMDEyMzQ1Njc4OSIsInRvX25hbWUiOiJUUkHMgE4gVEhJIEIiLCJ0eF9pZCI6IjNmMmI4YzFlLTVhNGQtNGU3Zi05YjZhLTFjMmQzZTRmNWE2YiIsInYiOjF9"
+    },
+    {
+      "name": "escaped_unicode_name",
+      "payload": "tba1:eyJhbW91bnQiOjEwMDAwMDAsImN1cnJlbmN5IjoiVk5EIiwiZXhwIjoxODAwMDAwMTIwLCJmcm9tIjoiMDAxMTIyMzM0NCIsIm5vbmNlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EdyIsInRvIjoiMDEyMzQ1Njc4OSIsInRvX25hbWUiOiJUUlx1MDBjME4gVEhJIEIiLCJ0eF9pZCI6IjNmMmI4YzFlLTVhNGQtNGU3Zi05YjZhLTFjMmQzZTRmNWE2YiIsInYiOjF9"
+    },
+    {
+      "name": "extra_field",
+      "payload": "tba1:eyJhbW91bnQiOjEwMDAwMDAsImN1cnJlbmN5IjoiVk5EIiwiZXhwIjoxODAwMDAwMTIwLCJmcm9tIjoiMDAxMTIyMzM0NCIsIm5vbmNlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EdyIsInRvIjoiMDEyMzQ1Njc4OSIsInRvX25hbWUiOiJUUkFOIFRISSBCIiwidHhfaWQiOiIzZjJiOGMxZS01YTRkLTRlN2YtOWI2YS0xYzJkM2U0ZjVhNmIiLCJ2IjoxLCJ6eiI6MX0"
+    },
+    {
+      "name": "missing_field",
+      "payload": "tba1:eyJhbW91bnQiOjEwMDAwMDAsImN1cnJlbmN5IjoiVk5EIiwiZXhwIjoxODAwMDAwMTIwLCJmcm9tIjoiMDAxMTIyMzM0NCIsInRvIjoiMDEyMzQ1Njc4OSIsInRvX25hbWUiOiJUUkFOIFRISSBCIiwidHhfaWQiOiIzZjJiOGMxZS01YTRkLTRlN2YtOWI2YS0xYzJkM2U0ZjVhNmIiLCJ2IjoxfQ"
+    },
+    {
+      "name": "bool_amount",
+      "payload": "tba1:eyJhbW91bnQiOnRydWUsImN1cnJlbmN5IjoiVk5EIiwiZXhwIjoxODAwMDAwMTIwLCJmcm9tIjoiMDAxMTIyMzM0NCIsIm5vbmNlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EdyIsInRvIjoiMDEyMzQ1Njc4OSIsInRvX25hbWUiOiJUUkFOIFRISSBCIiwidHhfaWQiOiIzZjJiOGMxZS01YTRkLTRlN2YtOWI2YS0xYzJkM2U0ZjVhNmIiLCJ2IjoxfQ"
+    },
+    {
+      "name": "negative_amount",
+      "payload": "tba1:eyJhbW91bnQiOi0xMDAwMDAwLCJjdXJyZW5jeSI6IlZORCIsImV4cCI6MTgwMDAwMDEyMCwiZnJvbSI6IjAwMTEyMjMzNDQiLCJub25jZSI6IkFBRUNBd1FGQmdjSUNRb0xEQTBPRHciLCJ0byI6IjAxMjM0NTY3ODkiLCJ0b19uYW1lIjoiVFJBTiBUSEkgQiIsInR4X2lkIjoiM2YyYjhjMWUtNWE0ZC00ZTdmLTliNmEtMWMyZDNlNGY1YTZiIiwidiI6MX0"
+    },
+    {
+      "name": "too_large_amount",
+      "payload": "tba1:eyJhbW91bnQiOjkwMDcxOTkyNTQ3NDA5OTMsImN1cnJlbmN5IjoiVk5EIiwiZXhwIjoxODAwMDAwMTIwLCJmcm9tIjoiMDAxMTIyMzM0NCIsIm5vbmNlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EdyIsInRvIjoiMDEyMzQ1Njc4OSIsInRvX25hbWUiOiJUUkFOIFRISSBCIiwidHhfaWQiOiIzZjJiOGMxZS01YTRkLTRlN2YtOWI2YS0xYzJkM2U0ZjVhNmIiLCJ2IjoxfQ"
+    },
+    {
+      "name": "no_prefix",
+      "payload": "eyJhbW91bnQiOjEwMDAwMDAsImN1cnJlbmN5IjoiVk5EIiwiZXhwIjoxODAwMDAwMTIwLCJmcm9tIjoiMDAxMTIyMzM0NCIsIm5vbmNlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EdyIsInRvIjoiMDEyMzQ1Njc4OSIsInRvX25hbWUiOiJUUkFOIFRISSBCIiwidHhfaWQiOiIzZjJiOGMxZS01YTRkLTRlN2YtOWI2YS0xYzJkM2U0ZjVhNmIiLCJ2IjoxfQ"
+    },
+    {
+      "name": "bad_base64",
+      "payload": "tba1:!!!!"
+    },
+    {
+      "name": "trailing_newline",
+      "payload": "tba1:eyJhbW91bnQiOjEwMDAwMDAsImN1cnJlbmN5IjoiVk5EIiwiZXhwIjoxODAwMDAwMTIwLCJmcm9tIjoiMDAxMTIyMzM0NCIsIm5vbmNlIjoiQUFFQ0F3UUZCZ2NJQ1FvTERBME9EdyIsInRvIjoiMDEyMzQ1Njc4OSIsInRvX25hbWUiOiJUUkFOIFRISSBCIiwidHhfaWQiOiIzZjJiOGMxZS01YTRkLTRlN2YtOWI2YS0xYzJkM2U0ZjVhNmIiLCJ2IjoxfQo"
+    }
+  ]
+}
