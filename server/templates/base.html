@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}TBA Bank{% endblock %}</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:40rem;margin:2rem auto;padding:0 1rem;color:#1a1a1a}
+header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ddd;margin-bottom:1rem}
+.mode{font-family:monospace;background:#eef;padding:.1rem .4rem;border-radius:.3rem}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:.3rem 1rem}dt{color:#555}dd{margin:0;font-weight:600}
+.error{color:#b00020}.ok{color:#0a7a0a}input,button{font-size:1rem;padding:.4rem}label{display:block;margin:.5rem 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>TBA Bank</h1>
+  <span>mode: <span class="mode">{{ mode }}</span>
+  {% if user %} · {{ user["username"] }}
+  <form method="post" action="/logout" style="display:inline"><button>Log out</button></form>{% endif %}</span>
+</header>
+{% block content %}{% endblock %}
+</body>
+</html>

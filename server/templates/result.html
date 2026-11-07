@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+{% if state == "executed" %}
+<h2 class="ok">Transfer completed</h2>
+<p>{{ tx["amount"] | money }} sent to {{ tx["to_name"] }} ({{ tx["to"] }}).</p>
+{% else %}
+<h2 class="error">Transfer not completed</h2>
+<p>Authentication failed or the request expired (state: {{ state }}).</p>
+{% endif %}
+<p><a href="/transfer">New transfer</a></p>
+{% endblock %}

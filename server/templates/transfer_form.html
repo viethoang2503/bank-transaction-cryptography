@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>New transfer</h2>
+<p>Balance: {{ user["balance"] | money }}</p>
+{% if not has_device %}<p class="error">No authenticator enrolled. <a href="/enroll">Enroll a device</a> first.</p>{% endif %}
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<form method="post" action="/transfer">
+  <label>To account <input name="to" id="to" inputmode="numeric" required> <span id="to-name"></span></label>
+  <label>Amount (VND) <input name="amount" inputmode="numeric" required></label>
+  <button>Continue</button>
+</form>
+<p><a href="/enroll">Enroll or replace authenticator</a></p>
+<script>
+document.getElementById("to").addEventListener("change", async (event) => {
+  const r = await fetch("/api/lookup?account=" + encodeURIComponent(event.target.value));
+  document.getElementById("to-name").textContent = r.ok ? (await r.json()).name : "Unknown account";
+});
+</script>
+{% endblock %}

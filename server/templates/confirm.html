@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Confirm transfer</h2>
+<dl>
+  <dt>From</dt><dd>{{ tx["from"] }}</dd>
+  <dt>To account</dt><dd id="to-account">{{ tx["to"] }}</dd>
+  <dt>Recipient</dt><dd id="to-name">{{ tx["to_name"] }}</dd>
+  <dt>Amount</dt><dd id="amount">{{ tx["amount"] | money }}</dd>
+  <dt>Expires in</dt><dd>{{ expires_in }} s</dd>
+</dl>
+{% if qr_payload %}
+<p>Scan this code with your authenticator and check the details shown on the phone.</p>
+<div id="qr" data-payload="{{ qr_payload }}">{{ qr_svg | safe }}</div>
+{% endif %}
+{% if mode in ("baseline", "hmac") %}
+<form method="post" action="/transfer/{{ tx['tx_id'] }}/otp">
+  <label>{% if mode == "baseline" %}Enter the {{ otp_digits }}-digit code from your authenticator{% else %}Enter the {{ otp_digits }}-digit transaction code shown on your phone{% endif %}
+    <input name="otp" inputmode="numeric" autocomplete="one-time-code" required></label>
+  <button>Confirm</button>
+</form>
+{% else %}
+<p id="status">Waiting for approval on your phone…</p>
+<script>
+async function poll() {
+  const r = await fetch("/transfer/{{ tx['tx_id'] }}/status");
+  if (r.ok) {
+    const state = (await r.json()).state;
+    if (state !== "pending") { location.href = "/transfer/{{ tx['tx_id'] }}/result"; return; }
+  }
+  setTimeout(poll, 2000);
+}
+poll();
+</script>
+{% endif %}
+{% endblock %}
