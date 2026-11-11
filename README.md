@@ -5,7 +5,9 @@ Midterm project: Transaction-Bound Authentication for Online Banking.
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
-make test
+make test        # Python tests
+make test-js     # authenticator crypto against shared/vectors.json (needs Node >= 20)
+make scenarios   # attack scenarios S1-S13 in all four modes -> results/
 ```
 See `docs/architecture.md` and `docs/superpowers/specs/` for the design.
 
@@ -25,3 +27,7 @@ A device can be enrolled only once per account. To enroll again (new phone, or a
 Then open `https://<LAN-IP>:8443/app/` on the phone and `https://localhost:8443/` on the laptop (log in as `alice` / `alice-pass`).
 
 Fallback if the phone cannot trust the CA: `cloudflared tunnel --url https://localhost:8443 --no-tls-verify` and use the printed `https://*.trycloudflare.com` URL on both devices.
+
+## Third-party code
+
+`authenticator/vendor/jsQR.js` is jsQR 1.4.0 (Apache-2.0), https://github.com/cozmo/jsQR.

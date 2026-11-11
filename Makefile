@@ -15,3 +15,24 @@ run:
 # Wipe one mode's demo bank (users, balances, enrolled device). The only way to re-enroll.
 reset:
 	rm -f tba-$(MODE).sqlite3
+
+.PHONY: scenarios bench sizes bruteforce eval
+
+scenarios:
+	$(PY) -m evaluation.run_scenarios
+
+bench:
+	$(PY) -m evaluation.bench
+
+sizes:
+	$(PY) -m evaluation.sizes
+
+bruteforce:
+	$(PY) -m evaluation.bruteforce
+
+eval: test scenarios bench sizes bruteforce
+
+.PHONY: test-js
+
+test-js:
+	node --test authenticator/tests/*.test.mjs
