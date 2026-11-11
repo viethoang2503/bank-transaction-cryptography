@@ -1,0 +1,14 @@
+\begin{tabularx}{\linewidth}{@{}lXcccc@{}}
+\toprule
+Goal & Description & baseline & hmac & sig & sig\_blind \\
+\midrule
+G1 & Authorization integrity (code bound to the exact transaction) & \xmark & \cmark & \cmark & \cmark \\
+G2 & Freshness (no replay, no late use) & \cmark & \cmark & \cmark & \cmark \\
+G3 & Single use under concurrency & \cmark & \cmark & \cmark & \cmark \\
+G4 & Guessing limit per transaction & \cmark & \cmark & \cmark & \cmark \\
+G5 & Resilience to server database leak & \xmark & \xmark & \cmark & \cmark \\
+G6 & Verifiable evidence (third party can check) & \xmark & \xmark & \cmark & \cmark$^{*}$ \\
+G7 & What you see is what you sign (attentive user) & \xmark & \cmark & \cmark & \xmark \\
+\bottomrule
+\end{tabularx}
+\par\smallskip{\footnotesize $^{*}$ In \texttt{sig\_blind} the signature only proves that the device signed, not that the user saw the transaction.\par}

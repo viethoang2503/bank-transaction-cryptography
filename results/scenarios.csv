@@ -1,0 +1,57 @@
+scenario,title,mode,outcome,expected
+S1,Honest transfer,baseline,ok,ok
+S1,Honest transfer,hmac,ok,ok
+S1,Honest transfer,sig,ok,ok
+S1,Honest transfer,sig_blind,ok,ok
+S2a,"MitB swaps recipient, attentive user",baseline,succeeded,succeeded
+S2a,"MitB swaps recipient, attentive user",hmac,blocked,blocked
+S2a,"MitB swaps recipient, attentive user",sig,blocked,blocked
+S2a,"MitB swaps recipient, attentive user",sig_blind,succeeded,succeeded
+S2b,"MitB swaps recipient, careless user",baseline,succeeded,succeeded
+S2b,"MitB swaps recipient, careless user",hmac,succeeded,succeeded
+S2b,"MitB swaps recipient, careless user",sig,succeeded,succeeded
+S2b,"MitB swaps recipient, careless user",sig_blind,succeeded,succeeded
+S3,MitB changes amount,baseline,succeeded,succeeded
+S3,MitB changes amount,hmac,blocked,blocked
+S3,MitB changes amount,sig,blocked,blocked
+S3,MitB changes amount,sig_blind,succeeded,succeeded
+S4,MitB forges QR with intended details,baseline,succeeded,succeeded
+S4,MitB forges QR with intended details,hmac,blocked,blocked
+S4,MitB forges QR with intended details,sig,blocked,blocked
+S4,MitB forges QR with intended details,sig_blind,blocked,blocked
+S5,Tamper each field after code issued,baseline,succeeded,succeeded
+S5,Tamper each field after code issued,hmac,blocked,blocked
+S5,Tamper each field after code issued,sig,blocked,blocked
+S5,Tamper each field after code issued,sig_blind,blocked,blocked
+S6,Replay code on old and new transaction,baseline,blocked,blocked
+S6,Replay code on old and new transaction,hmac,blocked,blocked
+S6,Replay code on old and new transaction,sig,blocked,blocked
+S6,Replay code on old and new transaction,sig_blind,blocked,blocked
+S7,Confirm after expiry,baseline,blocked,blocked
+S7,Confirm after expiry,hmac,blocked,blocked
+S7,Confirm after expiry,sig,blocked,blocked
+S7,Confirm after expiry,sig_blind,blocked,blocked
+S8,50 concurrent submissions of one code,baseline,blocked,blocked
+S8,50 concurrent submissions of one code,hmac,blocked,blocked
+S8,50 concurrent submissions of one code,sig,blocked,blocked
+S8,50 concurrent submissions of one code,sig_blind,blocked,blocked
+S9,"3 wrong guesses, then correct code",baseline,blocked,blocked
+S9,"3 wrong guesses, then correct code",hmac,blocked,blocked
+S9,"3 wrong guesses, then correct code",sig,blocked,blocked
+S9,"3 wrong guesses, then correct code",sig_blind,blocked,blocked
+S10,"Server DB leak, forge transfer",baseline,succeeded,succeeded
+S10,"Server DB leak, forge transfer",hmac,succeeded,succeeded
+S10,"Server DB leak, forge transfer",sig,blocked,blocked
+S10,"Server DB leak, forge transfer",sig_blind,blocked,blocked
+S11,Third party can verify evidence,baseline,no,no
+S11,Third party can verify evidence,hmac,no,no
+S11,Third party can verify evidence,sig,yes,yes
+S11,Third party can verify evidence,sig_blind,yes,yes
+S12,Non-canonical QR payloads,baseline,n/a,n/a
+S12,Non-canonical QR payloads,hmac,blocked,blocked
+S12,Non-canonical QR payloads,sig,blocked,blocked
+S12,Non-canonical QR payloads,sig_blind,blocked,blocked
+S13,Malformed signatures,baseline,n/a,n/a
+S13,Malformed signatures,hmac,n/a,n/a
+S13,Malformed signatures,sig,blocked,blocked
+S13,Malformed signatures,sig_blind,blocked,blocked

@@ -1,0 +1,21 @@
+\begin{tabularx}{\linewidth}{@{}lXcccc@{}}
+\toprule
+ID & Scenario & baseline & hmac & sig & sig\_blind \\
+\midrule
+S1 & Honest transfer & \cmark & \cmark & \cmark & \cmark \\
+S2a & MitB swaps recipient, attentive user & \xmark & \cmark & \cmark & \xmark \\
+S2b & MitB swaps recipient, careless user & \xmark & \xmark & \xmark & \xmark \\
+S3 & MitB changes amount & \xmark & \cmark & \cmark & \xmark \\
+S4 & MitB forges QR with intended details & \xmark & \cmark & \cmark & \cmark \\
+S5 & Tamper each field after code issued & \xmark & \cmark & \cmark & \cmark \\
+S6 & Replay code on old and new transaction & \cmark & \cmark & \cmark & \cmark \\
+S7 & Confirm after expiry & \cmark & \cmark & \cmark & \cmark \\
+S8 & 50 concurrent submissions of one code & \cmark & \cmark & \cmark & \cmark \\
+S9 & 3 wrong guesses, then correct code & \cmark & \cmark & \cmark & \cmark \\
+S10 & Server DB leak, forge transfer & \xmark & \xmark & \cmark & \cmark \\
+S11 & Third party can verify evidence & \xmark & \xmark & \cmark & \cmark$^{*}$ \\
+S12 & Non-canonical QR payloads & -- & \cmark & \cmark & \cmark \\
+S13 & Malformed signatures & -- & -- & \cmark & \cmark \\
+\bottomrule
+\end{tabularx}
+\par\smallskip{\footnotesize $^{*}$ In \texttt{sig\_blind} the signature only proves that the device signed, not that the user saw the transaction.\par}
