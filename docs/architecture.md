@@ -67,15 +67,18 @@ sequenceDiagram
   participant P as Authenticator
   U->>B: Đăng nhập, mở /enroll
   B->>S: GET /enroll
+  Note over S: Đã có thiết bị → 409, không phát token (không cho thay thiết bị chỉ bằng session)
   S->>S: token = random, hạn 300 s, dùng 1 lần
   S-->>B: QR "tbaenroll1:" + token
   U->>P: Quét QR
   P->>P: generateKey(ECDSA P-256, non-extractable)
   P->>S: POST /api/device/enroll {token, public_key}
   S->>S: Đánh dấu token đã dùng, sinh K_totp, K_hmac, lưu thiết bị
-  S-->>P: {device_id, k_totp, k_hmac, mode}
+  S-->>P: {device_id, k_totp, k_hmac, mode} (khóa HMAC ở dạng rõ, qua HTTPS)
   P->>P: importKey(HMAC, non-extractable), lưu vào IndexedDB
 ```
+
+Lưu ý khi viết Chương 4 và 5: chỉ khóa riêng ECDSA là không bao giờ rời điện thoại (sinh tại chỗ, `extractable = false`). `k_totp` và `k_hmac` là bí mật dùng chung: server sinh, gửi dạng rõ trong JSON và lưu dạng rõ trong bảng `devices`. "Non-extractable" chỉ đúng với bản sao trên điện thoại *sau khi* `importKey`. Đây cũng là lý do S10 phá được `baseline` và `hmac`. Server hiện sinh và gửi cả hai khóa này ở mọi chế độ, kể cả `sig`/`sig_blind`.
 
 ## 4. Xác nhận giao dịch, 4 chế độ (Hình F3)
 
@@ -114,7 +117,45 @@ sequenceDiagram
   S-->>B: Kết quả
 ```
 
-Luồng `sig` khi bị MitB tấn công đã được vẽ riêng trong cuộc trao đổi (có thể dùng làm hình trong chương 6).
+### 4b. Luồng `sig` khi bị MitB tấn công (hình cho Chương 6)
+
+Người dùng muốn chuyển cho Bob. MitB đổi `to` thành tài khoản Mallory và sửa trang để vẫn hiện Bob. Ba nhánh tương ứng S2a (`sig`), S2a (`sig_blind`) và S4.
+
+```mermaid
+sequenceDiagram
+  participant U as Người dùng
+  participant M as MitB (trong trình duyệt)
+  participant S as Server
+  participant P as Authenticator
+  U->>M: to = Bob, amount = 1.000.000
+  M->>S: POST /transfer (to = Mallory)
+  S->>S: tx = new_tx(to = Mallory), lưu canonical, state = pending
+  S-->>M: Trang xác nhận + QR(canonical với to = Mallory)
+  M-->>U: Trang hiển thị "Bob" (đã bị sửa)
+  alt sig, QR thật (S2a)
+    U->>P: Quét QR
+    P->>U: Hiển thị to = Mallory, to_name = LE VAN M
+    U->>P: Thấy không khớp ý định, Reject
+    Note over S: Không có chữ ký, giao dịch hết hạn → blocked
+  else sig_blind, QR thật (S2a)
+    U->>P: Quét QR
+    P->>U: Chỉ có nút Approve, không hiện chi tiết
+    U->>P: Approve
+    P->>S: POST /api/device/confirm {sig trên tx to = Mallory}
+    S->>S: Chữ ký hợp lệ trên canonical trong DB
+    Note over S: Thực hiện chuyển cho Mallory → succeeded
+  else sig, MitB giả QR với to = Bob (S4)
+    M-->>U: QR giả chứa tx' (to = Bob, cùng tx_id)
+    U->>P: Quét QR giả
+    P->>U: Hiển thị to = Bob (khớp ý định)
+    U->>P: Approve
+    P->>S: POST /api/device/confirm {sig trên tx'}
+    S->>S: Verify trên canonical trong DB (to = Mallory) → sai
+    Note over S: attempts += 1, không chuyển tiền → blocked
+  end
+```
+
+Ý chính cho Chương 6: S4 bị chặn nhờ *gắn mật mã* (server chỉ tin bản canonical của mình, G1). S2a chỉ bị chặn khi điện thoại *hiển thị* giao dịch và người dùng đọc nó (G7). `sig_blind` có đủ phần mật mã nhưng vẫn thua S2a.
 
 ## 5. Vòng đời giao dịch
 

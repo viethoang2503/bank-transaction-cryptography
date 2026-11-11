@@ -14,7 +14,8 @@
 
 - Encoding phải cho ra đúng chuỗi byte như `tba_core/encoding.py` (kiểm bằng `shared/vectors.json`).
 - Domain tag `"TBA-HMAC-v1"` và `"TBA-SIG-v1"`, nối với canonical bằng byte `0x00`.
-- Khóa ký P-256 và khóa HMAC đều ở dạng **non-extractable**.
+- Khóa ký P-256 sinh ngay trên điện thoại với `extractable = false`: khóa riêng không bao giờ được xuất ra qua Web Crypto API (bảo vệ ở mức API trình duyệt, không có phần cứng bảo vệ).
+- `k_totp` và `k_hmac` là **khóa bí mật dùng chung**: server sinh, gửi dạng rõ trong JSON của `POST /api/device/enroll` (qua HTTPS) và lưu dạng rõ trong bảng `devices`. Điện thoại import chúng với `extractable = false`, nên chỉ *sau khi import* thì JS không đọc lại được byte khóa. Không được viết rằng khóa HMAC "không bao giờ rời thiết bị" (xem S10: lộ DB thì `hmac` bị phá).
 - Chế độ `sig_blind` **không được** hiển thị bất kỳ trường nào của giao dịch.
 - Giao diện tiếng Anh.
 
@@ -654,7 +655,7 @@ init().catch(fail);
    Expected: hiện `1,000,000 VND`, `0123456789`, `TRAN THI B`.
 5. **Approve** → nhập mã 8 chữ số vào trang ngân hàng.
    Expected: "Transfer completed".
-6. Lặp lại với `make run MODE=sig_blind` (xóa thiết bị bằng **Forget this device** rồi đăng ký lại).
+6. Lặp lại với `make run MODE=sig_blind` (xóa thiết bị bằng **Forget this device** rồi đăng ký lại; mỗi chế độ có DB riêng nên lần đầu đăng ký được ngay, còn muốn đăng ký lại trong một chế độ đã dùng thì dừng server và chạy `make reset MODE=<mode>`, vì server không cho thay thiết bị qua web).
    Expected: màn hình chỉ có "Approve pending transaction?", không có số tiền hay tài khoản; sau Approve, trang ngân hàng tự chuyển sang "Transfer completed".
 
 - [ ] **Step 7: Kiểm tra trên điện thoại thật** (sau spike HTTPS của plan 02 Task 5)

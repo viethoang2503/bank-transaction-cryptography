@@ -47,7 +47,7 @@ Xây một hệ thống ngân hàng demo có 4 chế độ xác thực giao dị
    - `signature.py`: ECDSA P-256 (chữ ký raw `r‖s` 64 byte), thêm Ed25519 để benchmark.
    - `challenge.py`: sinh nonce và giao dịch mới.
 2. **`server/`**: FastAPI + SQLite + Jinja2. Đăng nhập, đăng ký thiết bị, tạo giao dịch, xác minh, ghi sổ, audit log.
-3. **`authenticator/`**: web app tĩnh (HTML + ES modules) cho điện thoại. Dùng Web Crypto với khóa non-extractable lưu trong IndexedDB, quét QR bằng jsQR.
+3. **`authenticator/`**: web app tĩnh (HTML + ES modules) cho điện thoại. Dùng Web Crypto, lưu khóa trong IndexedDB, quét QR bằng jsQR. Khóa ký ECDSA sinh trên điện thoại với `extractable = false` nên khóa riêng không rời điện thoại qua API. `k_totp` và `k_hmac` do server sinh, gửi dạng rõ lúc đăng ký và lưu dạng rõ trong DB; điện thoại chỉ import chúng ở dạng non-extractable.
 4. **`attacker/`**: addon `mitmproxy` mô phỏng MitB.
 5. **`evaluation/`**: harness, điện thoại ảo, mô hình người dùng, kịch bản tấn công S1-S13, brute-force, benchmark, sinh bảng LaTeX.
 6. **`shared/vectors.json`**: test vector dùng chung cho Python và JS.
@@ -98,7 +98,7 @@ Thừa hay thiếu trường đều bị từ chối.
 
 1. Trình duyệt mở `/enroll`, server tạo token (ngẫu nhiên, dùng một lần, hạn 300 giây) và hiển thị QR.
 2. Điện thoại sinh cặp khóa P-256 non-extractable, gửi `POST /api/device/enroll {token, public_key}`.
-3. Server trả `{device_id, k_totp, k_hmac, mode}`. Mỗi người dùng chỉ có một thiết bị; đăng ký lại sẽ thay thế thiết bị cũ.
+3. Server trả `{device_id, k_totp, k_hmac, mode}`. Mỗi người dùng chỉ có một thiết bị. Khi đã có thiết bị, server **từ chối đăng ký lại**: `GET /enroll` trả 409 và không phát token, `enroll_device` từ chối cả token đã phát trước đó. Lý do: nếu chỉ cần session là thay được thiết bị thì kẻ A1 (MitB) hoặc kẻ có mật khẩu tự đăng ký khóa của mình rồi duyệt mọi giao dịch, ở mọi chế độ. Trong demo, muốn đăng ký lại thì xóa DB bằng `make reset MODE=<mode>`; hệ thống thật cần quy trình ngoài băng (ghi vào Limitations).
 
 ### 4.4. API
 
@@ -106,16 +106,16 @@ Thừa hay thiếu trường đều bị từ chối.
 |---|---|---|---|
 | Trình duyệt | `GET/POST /login` | form `username`, `password` | 303 → `/transfer`, cookie `session` (HttpOnly, Secure, SameSite=Lax); 401 nếu sai |
 | Trình duyệt | `POST /logout` | | 303 → `/login` |
-| Trình duyệt | `GET /enroll` | | HTML có `<div id="qr" data-payload="tbaenroll1:...">` |
+| Trình duyệt | `GET /enroll` | | HTML có `<div id="qr" data-payload="tbaenroll1:...">`; 409 và không có QR nếu người dùng đã có thiết bị |
 | Trình duyệt | `GET /transfer` | | Form chuyển tiền |
 | Trình duyệt | `POST /transfer` | form `to`, `amount` | 303 → `/transfer/{tx_id}`; 400 kèm thông báo lỗi |
 | Trình duyệt | `GET /transfer/{tx_id}` | | Trang xác nhận; chế độ khác `baseline` có `<div id="qr" data-payload="tba1:...">` |
-| Trình duyệt | `POST /transfer/{tx_id}/otp` | form `otp` (khoảng trắng bị bỏ qua) | Trang kết quả; 200 nếu đã thực hiện, 400 nếu không |
+| Trình duyệt | `POST /transfer/{tx_id}/otp` | form `otp` (khoảng trắng bị bỏ qua) | 200 + trang kết quả nếu đã thực hiện; 400 + trang xác nhận kèm số lượt còn lại nếu mã sai mà giao dịch còn `pending`; 400 + trang kết quả nếu `failed`/`expired`; 404 ở chế độ `sig`/`sig_blind` |
 | Trình duyệt | `GET /transfer/{tx_id}/status` | | `{"state": "pending"\|"executed"\|"failed"\|"expired"}` |
 | Trình duyệt | `GET /transfer/{tx_id}/result` | | Trang kết quả |
 | Trình duyệt | `GET /api/lookup?account=` | cần session | `{"account", "name"}` hoặc 404 |
 | Điện thoại | `GET /api/config` | | `{"mode", "otp_digits": 8, "totp_digits": 6}` |
-| Điện thoại | `POST /api/device/enroll` | `{"token", "public_key"}` (base64url, điểm không nén 65 byte) | `{"device_id","k_totp","k_hmac","mode"}`; 400 `invalid_public_key`; 403 `invalid_token` |
+| Điện thoại | `POST /api/device/enroll` | `{"token", "public_key"}` (base64url, điểm không nén 65 byte) | `{"device_id","k_totp","k_hmac","mode"}`; 400 `invalid_public_key`; 403 `invalid_token` (token sai, hết hạn, đã dùng, hoặc người dùng đã có thiết bị) |
 | Điện thoại | `POST /api/device/confirm` | `{"device_id","tx_id","signature"}` (base64url, 64 byte) | `{"result": "ok"\|"rejected"}`; 422 nếu thiếu trường; **không bao giờ trả 5xx** |
 
 ### 4.5. Thứ tự kiểm tra phía server (trong một `BEGIN IMMEDIATE`)
@@ -124,7 +124,7 @@ Thừa hay thiếu trường đều bị từ chối.
 2. Trạng thái là `pending`.
 3. Chưa quá `exp` (nếu quá thì chuyển sang `expired`).
 4. Dựng lại `tx` từ bản canonical trong DB.
-5. Xác minh OTP hoặc chữ ký. Nếu sai: `attempts += 1`; khi `attempts ≥ 3` thì chuyển sang `failed`.
+5. Xác minh OTP hoặc chữ ký. Nếu sai: `attempts += 1`; khi `attempts ≥ 3` thì chuyển sang `failed`. Bằng chứng sai loại so với chế độ (OTP ở chế độ chữ ký, chữ ký ở chế độ OTP) bị từ chối trước bước 1 và không tính vào `attempts`.
 6. Nếu đúng: trừ tiền người gửi (với điều kiện `balance ≥ amount`), cộng tiền người nhận, chuyển sang `executed`, lưu bằng chứng (`evidence`) là OTP hoặc chữ ký.
 7. Ghi audit log. Client chỉ nhận thông báo chung, lý do cụ thể nằm trong audit log.
 
@@ -157,7 +157,7 @@ Mật khẩu băm bằng scrypt (n=2¹⁴, r=8, p=1). K_totp và K_hmac lưu pla
 | G1 | Toàn vẹn ủy quyền: server chỉ thực hiện T nếu thiết bị đã tạo mã cho đúng T | S4, S5 |
 | G2 | Tính tươi | S6, S7 |
 | G3 | Dùng một lần | S8 |
-| G4 | Chống đoán | S9 |
+| G4 | Chống đoán, **trong phạm vi một giao dịch** (không có giới hạn theo người dùng, xem Limitations) | S9 |
 | G5 | Chịu được lộ DB | S10 |
 | G6 | Chống chối bỏ | S11 |
 | G7 | WYSIWYS: người dùng đã thấy đúng T | S2a, S3 |
@@ -185,11 +185,18 @@ Mật khẩu băm bằng scrypt (n=2¹⁴, r=8, p=1). K_totp và K_hmac lưu pla
 | S12 | 14 payload QR không chuẩn | n/a | blocked | blocked | blocked |
 | S13 | Chữ ký dị dạng (server không được trả 5xx) | n/a | n/a | blocked | blocked |
 
-\* Với `sig_blind`, chữ ký chỉ chứng minh thiết bị đã ký, không chứng minh người dùng đã nhìn thấy giao dịch. Report phải ghi chú điểm này.
+\* Với `sig_blind`, chữ ký chỉ chứng minh thiết bị đã ký, không chứng minh người dùng đã nhìn thấy giao dịch. Report phải ghi chú điểm này. `evaluation/latex.py` tự gắn dấu \* vào ô `sig_blind` của S11 và G6, kèm chú thích dưới bảng.
 
 Thay đổi so với bản thảo trong chat: S6 ở `baseline` là `blocked` (vì baseline được cài đúng RFC, có chặn dùng lại bước thời gian); thêm S2b; G1 dùng S4/S5, còn G7 dùng S2a/S3, để tách bạch vai trò của *gắn mật mã* và *hiển thị*.
 
-**Thí nghiệm brute-force (S9):** mô phỏng 100.000 giao dịch với OTP 3 và 4 chữ số, mỗi giao dịch đoán 3 lần; so sánh với lý thuyết `3/10^d` (hmac) và `1 − C(10^d−3,3)/C(10^d,3)` (baseline, cửa sổ 3 mã); ngoại suy lý thuyết cho d = 6 và 8.
+**Thí nghiệm brute-force (S9):** mô phỏng 100.000 giao dịch với OTP 3 và 4 chữ số, mỗi giao dịch đoán 3 lần; so sánh với lý thuyết `3/10^d` (hmac) và `1 − C(10^d−3,3)/C(10^d,3)` (baseline, cửa sổ 3 mã); ngoại suy lý thuyết cho d = 6 và 8. Mọi con số là **xác suất trên mỗi giao dịch**.
+
+**Giới hạn của G4 (bắt buộc ghi vào Chương 6 và mục Limitations ở Chương 8):** giới hạn 3 lần thử tính theo từng giao dịch (`server/verify.py`, `settings.max_attempts`), không có bộ đếm theo người dùng hay thiết bị, và `create_transfer` không giới hạn số giao dịch đang chờ. Kẻ A4 (có mật khẩu, không có điện thoại) có thể tạo k giao dịch, mỗi giao dịch đoán 3 lần, nên xác suất thành công cộng dồn xấp xỉ k·p:
+- `baseline` (6 chữ số, cửa sổ 3 mã): p ≈ 9,0·10⁻⁶ mỗi giao dịch; khoảng 7,7·10⁴ giao dịch cho 50%.
+- `hmac` (8 chữ số): p = 3·10⁻⁸ mỗi giao dịch; khoảng 2,3·10⁷ giao dịch cho 50%.
+- `sig`/`sig_blind`: phải giả mạo chữ ký ECDSA, không đoán được.
+
+Vì vậy dấu ✓ của G4 trong bảng mục tiêu chỉ có nghĩa là "cơ chế khóa theo giao dịch hoạt động". Cách khắc phục (ngoài phạm vi): bộ đếm sai theo người dùng hoặc thiết bị và giới hạn tốc độ tạo giao dịch. Cách này có đánh đổi: kẻ có mật khẩu có thể cố tình đoán sai để khóa tài khoản nạn nhân (DoS).
 
 **Hiệu năng:**
 - P1: median và p95 (10.000 lần) cho canonical, TOTP, HMAC-OTP, ECDSA ký/verify, Ed25519 ký/verify, kèm thông tin máy.

@@ -741,13 +741,15 @@ def s11_non_repudiation(mode, workdir):
     tx = parse_canonical(bytes(row["canonical"]))
     evidence = bytes(row["evidence"])
     device = lab.device_row()
+    # An executed transaction whose stored evidence does not verify is a server bug,
+    # never a "good" outcome: report BROKEN instead of YES/NO.
     if mode in SIG_MODES:
         # A third party needs only the public key, which cannot produce signatures.
         ok = verify_tx_signature(public_key_from_raw(bytes(device["public_key"])), tx, evidence)
-        return YES if ok else NO
+        return YES if ok else BROKEN
     if mode == "hmac":
         # The bank holds K_hmac and can compute identical evidence itself.
-        return NO if tx_otp(bytes(device["k_hmac"]), tx).encode() == evidence else YES
+        return NO if tx_otp(bytes(device["k_hmac"]), tx).encode() == evidence else BROKEN
     return NO  # a TOTP code does not reference the transaction
 
 
@@ -855,9 +857,14 @@ def test_goals_from_expected_matrix():
 
 def test_latex_tables_render():
     t = scenarios_table(EXPECTED)
-    assert r"\begin{tabular}" in t and "S2a" in t and r"sig\_blind" in t and r"\xmark" in t
+    assert r"\begin{tabularx}{\linewidth}" in t and "S2a" in t and r"sig\_blind" in t and r"\xmark" in t
     g = goals_table(EXPECTED)
     assert "G7" in g and r"\cmark" in g
+    # sig_blind non-repudiation must carry the spec's asterisk and its note.
+    for table, row_id in ((t, "S11"), (g, "G6")):
+        row = next(line for line in table.splitlines() if line.startswith(row_id + " "))
+        assert row.rstrip(" \\").endswith(r"\cmark$^{*}$")
+        assert "device signed, not that the user saw" in table
 ```
 
 - [ ] **Step 2: Chạy để thấy test thất bại**
@@ -874,7 +881,8 @@ GOALS = {
     "G1": ("Authorization integrity (code bound to the exact transaction)", ["S4", "S5"]),
     "G2": ("Freshness (no replay, no late use)", ["S6", "S7"]),
     "G3": ("Single use under concurrency", ["S8"]),
-    "G4": ("Resistance to online guessing", ["S9"]),
+    # S9 checks the per-transaction lockout only; there is no per-user limit (see Limitations).
+    "G4": ("Guessing limit per transaction", ["S9"]),
     "G5": ("Resilience to server database leak", ["S10"]),
     "G6": ("Non-repudiation", ["S11"]),
     "G7": ("What you see is what you sign", ["S2a", "S3"]),
@@ -888,13 +896,19 @@ def goal_holds(results: dict, mode: str, ids: list[str]) -> bool | None:
 
 - [ ] **Step 4: Cài đặt `evaluation/latex.py`**
 
-Report cần `\usepackage{pifont,xcolor,booktabs}` cùng các macro `\cmark`, `\xmark` (đã có trong `report/main.tex`).
+Report cần `\usepackage{pifont,xcolor,booktabs,tabularx}` cùng các macro `\cmark`, `\xmark` (đã có trong `report/main.tex`). Cột mô tả dùng `X` của `tabularx` để tự xuống dòng, bảng không tràn lề. Ô `sig_blind` của S11 và G6 được gắn dấu \* kèm chú thích ngay dưới bảng (spec mục 6), nên **không sửa tay** file `.tex` sinh ra.
 
 ```python
 from .goals import GOALS, goal_holds
 from .outcomes import GOOD, MODES, NA
 
 HEADER = " & ".join(m.replace("_", r"\_") for m in MODES)
+COLSPEC = "@{}lX" + "c" * len(MODES) + "@{}"
+STAR = r"$^{*}$"
+# Spec section 6: in sig_blind the signature proves the device signed, not that the user saw the transaction.
+STARRED = {("S11", "sig_blind"), ("G6", "sig_blind")}
+STAR_NOTE = (r"\par\smallskip{\footnotesize " + STAR + r" In \texttt{sig\_blind} the signature only proves "
+             r"that the device signed, not that the user saw the transaction.\par}")
 
 
 def _cell(value: str) -> str:
@@ -903,26 +917,35 @@ def _cell(value: str) -> str:
     return r"\cmark" if value in GOOD else r"\xmark"
 
 
-def scenarios_table(results: dict, titles: dict | None = None) -> str:
-    titles = titles or {}
-    lines = [r"\begin{tabular}{llcccc}", r"\toprule", rf"ID & Scenario & {HEADER} \\", r"\midrule"]
-    for sid, row in results.items():
-        cells = " & ".join(_cell(row[m]) for m in MODES)
-        lines.append(rf"{sid} & {titles.get(sid, '')} & {cells} \\")
-    lines += [r"\bottomrule", r"\end{tabular}"]
+def _table(first: str, second: str, rows: list[tuple[str, str, list[str]]]) -> str:
+    lines = [rf"\begin{{tabularx}}{{\linewidth}}{{{COLSPEC}}}", r"\toprule",
+             rf"{first} & {second} & {HEADER} \\", r"\midrule"]
+    starred = False
+    for rid, desc, cells in rows:
+        marked = [c + STAR if (rid, m) in STARRED and c != "--" else c for m, c in zip(MODES, cells)]
+        starred = starred or marked != cells
+        lines.append(rf"{rid} & {desc} & {' & '.join(marked)} \\")
+    lines += [r"\bottomrule", r"\end{tabularx}"]
+    if starred:
+        lines.append(STAR_NOTE)
     return "\n".join(lines) + "\n"
 
 
+def scenarios_table(results: dict, titles: dict | None = None) -> str:
+    titles = titles or {}
+    rows = [(sid, titles.get(sid, ""), [_cell(row[m]) for m in MODES]) for sid, row in results.items()]
+    return _table("ID", "Scenario", rows)
+
+
 def goals_table(results: dict) -> str:
-    lines = [r"\begin{tabular}{llcccc}", r"\toprule", rf"Goal & Description & {HEADER} \\", r"\midrule"]
+    rows = []
     for gid, (desc, ids) in GOALS.items():
         cells = []
         for m in MODES:
             holds = goal_holds(results, m, ids)
             cells.append("--" if holds is None else (r"\cmark" if holds else r"\xmark"))
-        lines.append(rf"{gid} & {desc} & {' & '.join(cells)} \\")
-    lines += [r"\bottomrule", r"\end{tabular}"]
-    return "\n".join(lines) + "\n"
+        rows.append((gid, desc, cells))
+    return _table("Goal", "Description", rows)
 ```
 
 - [ ] **Step 5: Cài đặt `evaluation/run_scenarios.py`**
@@ -1175,7 +1198,7 @@ pipx inject mitmproxy segno     # only for MITB_FORGE_QR=1
 ```
 
 For each mode (`hmac`, `sig`, `sig_blind`, `baseline`):
-1. `make run MODE=<mode>` and enroll the phone (Forget device first when switching mode).
+1. `make run MODE=<mode>` and enroll the phone (Forget device first when switching mode; if that mode already has a device, run `make reset MODE=<mode>` before starting the server).
 2. `mitmdump -s attacker/mitb_addon.py --listen-port 8080 --ssl-insecure`
 3. Victim browser: proxy 127.0.0.1:8080, trust the mitmproxy CA from http://mitm.it.
 4. Log in as alice, type recipient `0123456789` (wait for "TRAN THI B" to appear), amount `1000000`, Continue.
@@ -1318,7 +1341,7 @@ def main(trials: int = 100_000) -> None:
                     fmt=marker, capsize=3, label=f"{scheme} measured (95% CI)")
     ax.set_yscale("log")
     ax.set_xlabel("OTP digits")
-    ax.set_ylabel("P(success) with 3 guesses")
+    ax.set_ylabel("P(success) per transaction, 3 guesses")
     ax.legend(fontsize=7)
     fig.tight_layout()
     fig.savefig(RESULTS / "bruteforce.pdf")
