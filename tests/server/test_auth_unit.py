@@ -38,14 +38,17 @@ def test_enroll_token_single_use_and_expiry(tmp_path):
     assert len(k_totp) == 20 and len(k_hmac) == 32
     assert auth.device_for_user(conn, uid)["id"] == device_id
     assert auth.enroll_device(conn, token, b"\x04" + bytes(64), now=1002) is None
-    late = auth.create_enroll_token(conn, uid, now=1000, ttl=300)
+    bob = auth.authenticate(conn, "bob", "bob-pass")["id"]
+    late = auth.create_enroll_token(conn, bob, now=1000, ttl=300)
     assert auth.enroll_device(conn, late, b"\x04" + bytes(64), now=1301) is None
+    assert auth.device_for_user(conn, bob) is None
 
 
-def test_reenroll_replaces_device(tmp_path):
+def test_reenroll_is_rejected_and_keeps_first_device(tmp_path):
     conn = _conn(tmp_path)
     uid = auth.authenticate(conn, "alice", "alice-pass")["id"]
     first = auth.enroll_device(conn, auth.create_enroll_token(conn, uid, 0, 300), b"\x04" + bytes(64), 1)[0]
-    second = auth.enroll_device(conn, auth.create_enroll_token(conn, uid, 0, 300), b"\x04" + bytes(64), 1)[0]
-    assert first != second
-    assert conn.execute("SELECT COUNT(*) FROM devices WHERE user_id=?", (uid,)).fetchone()[0] == 1
+    assert auth.enroll_device(conn, auth.create_enroll_token(conn, uid, 0, 300), b"\x04" + bytes(64), 1) is None
+    assert auth.device_for_user(conn, uid)["id"] == first
+    details = [r["detail"] for r in conn.execute("SELECT detail FROM audit_log WHERE event = 'enroll_rejected'")]
+    assert details == ["device already enrolled"]

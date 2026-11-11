@@ -138,3 +138,50 @@ def test_transfer_form_error(make):
     enroll(browser, phone)
     r = browser.post("/transfer", data={"to": "0000000000", "amount": "10"})
     assert r.status_code == 400 and "Unknown recipient" in r.text
+
+
+def test_session_alone_cannot_replace_device(make):
+    _, browser, phone = make("sig")
+    login(browser)
+    sk, device_id, _, _ = enroll(browser, phone)
+    r = browser.get("/enroll")
+    assert r.status_code == 409 and QR.search(r.text) is None and "tbaenroll1:" not in r.text
+    tx_id, qr = start_transfer(browser)
+    sig = b64url_encode(sign_tx(sk, decode_qr_payload(qr)))
+    assert phone.post("/api/device/confirm", json={"device_id": device_id, "tx_id": tx_id, "signature": sig}).json() == {"result": "ok"}
+
+
+def test_wrong_code_can_be_retried_until_lockout(make):
+    _, browser, phone = make("hmac")
+    login(browser)
+    _, _, _, k_hmac = enroll(browser, phone)
+    tx_id, qr = start_transfer(browser)
+    r = browser.post(f"/transfer/{tx_id}/otp", data={"otp": "00000000"})
+    assert r.status_code == 400 and "Incorrect code. 2 attempts left." in r.text
+    assert f'action="/transfer/{tx_id}/otp"' in r.text  # the form is shown again
+    r = browser.post(f"/transfer/{tx_id}/otp", data={"otp": "00000000"})
+    assert "Incorrect code. 1 attempt left." in r.text
+    r = browser.post(f"/transfer/{tx_id}/otp", data={"otp": tx_otp(k_hmac, decode_qr_payload(qr))})
+    assert r.status_code == 200 and "Transfer completed" in r.text
+
+
+def test_third_wrong_code_fails_transfer(make):
+    _, browser, phone = make("hmac")
+    login(browser)
+    enroll(browser, phone)
+    tx_id, _ = start_transfer(browser)
+    for _ in range(3):
+        r = browser.post(f"/transfer/{tx_id}/otp", data={"otp": "00000000"})
+    assert r.status_code == 400 and "Transfer not completed" in r.text
+    assert browser.get(f"/transfer/{tx_id}/status").json() == {"state": "failed"}
+
+
+def test_otp_posts_cannot_lock_out_a_signature_transfer(make):
+    _, browser, phone = make("sig")
+    login(browser)
+    sk, device_id, _, _ = enroll(browser, phone)
+    tx_id, qr = start_transfer(browser)
+    for _ in range(5):
+        assert browser.post(f"/transfer/{tx_id}/otp", data={"otp": "00000000"}).status_code == 404
+    sig = b64url_encode(sign_tx(sk, decode_qr_payload(qr)))
+    assert phone.post("/api/device/confirm", json={"device_id": device_id, "tx_id": tx_id, "signature": sig}).json() == {"result": "ok"}

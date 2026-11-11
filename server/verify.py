@@ -72,7 +72,17 @@ def _confirm(conn, settings, user_id: int, tx_id: str, now: int, check: Check) -
         return Result.OK
 
 
+def _wrong_mode(conn, user_id, tx_id: str, now: int) -> Result:
+    # Evidence of the wrong kind is refused without spending one of the
+    # transaction's attempts, so it cannot be used to lock a transaction out.
+    audit(conn, now, user_id, tx_id, "confirm_rejected", "wrong evidence type for mode")
+    return Result.REJECTED
+
+
 def confirm_otp(conn, settings, user_id: int, tx_id: str, code: str, now: int) -> Result:
+    if settings.mode in SIG_MODES:
+        return _wrong_mode(conn, user_id, tx_id, now)
+
     def check(tx, device):
         if settings.mode == "baseline":
             step = totp_verify(bytes(device["k_totp"]), code, now, device["last_totp_step"], digits=settings.totp_digits)
@@ -92,9 +102,11 @@ def confirm_signature(conn, settings, device_id: str, tx_id: str, signature: byt
     if owner is None:
         audit(conn, now, None, tx_id, "confirm_rejected", "unknown device")
         return Result.REJECTED
+    if settings.mode not in SIG_MODES:
+        return _wrong_mode(conn, owner["user_id"], tx_id, now)
 
     def check(tx, device):
-        if settings.mode not in SIG_MODES or device["id"] != device_id:
+        if device["id"] != device_id:
             return None
         public_key = public_key_from_raw(bytes(device["public_key"]))
         return signature if verify_tx_signature(public_key, tx, signature) else None

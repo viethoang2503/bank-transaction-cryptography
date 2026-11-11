@@ -109,3 +109,16 @@ def test_audit_log_records_reasons(tmp_path):
     confirm_otp(conn, s, alice["id"], tx["tx_id"], "12345678", NOW)
     events = [r["event"] for r in conn.execute("SELECT event FROM audit_log ORDER BY id")]
     assert "confirm_failed" in events
+
+
+def test_wrong_evidence_type_does_not_spend_attempts(tmp_path):
+    conn, s, alice, tx, d = setup(tmp_path, "sig")
+    for _ in range(5):
+        assert confirm_otp(conn, s, alice["id"], tx["tx_id"], "00000000", NOW) is Result.REJECTED
+    assert tuple(state(conn, tx["tx_id"])) == ("pending", 0)
+    assert confirm_signature(conn, s, d["device_id"], tx["tx_id"], sign_tx(d["sk"], tx), NOW) is Result.OK
+
+    conn, s, alice, tx, d = setup(tmp_path, "hmac")
+    for _ in range(5):
+        assert confirm_signature(conn, s, d["device_id"], tx["tx_id"], sign_tx(d["sk"], tx), NOW) is Result.REJECTED
+    assert tuple(state(conn, tx["tx_id"])) == ("pending", 0)

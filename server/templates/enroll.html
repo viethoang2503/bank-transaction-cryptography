@@ -1,8 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>Enroll authenticator</h2>
-<p>Open <code>/app/</code> on your phone and scan this code within 5 minutes. Enrolling replaces any existing device.</p>
+{% if payload %}
+<p>Open <code>/app/</code> on your phone and scan this code within 5 minutes.</p>
 <div id="qr" data-payload="{{ payload }}">{{ qr_svg | safe }}</div>
 <details><summary>Show payload (for testing)</summary><code>{{ payload }}</code></details>
+{% else %}
+<p class="error">An authenticator is already enrolled for this account. It cannot be replaced from the website; contact the bank to reset it.</p>
+{% endif %}
 <p><a href="/transfer">Back to transfers</a></p>
 {% endblock %}

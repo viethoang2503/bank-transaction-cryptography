@@ -53,6 +53,13 @@ def get_tx_for_user(conn, tx_id: str, user_id: int) -> dict | None:
     return parse_canonical(bytes(row["canonical"])) if row else None
 
 
+def attempts_used(conn, tx_id: str, user_id: int) -> int:
+    row = conn.execute(
+        "SELECT attempts FROM transactions WHERE tx_id = ? AND user_id = ?", (tx_id, user_id)
+    ).fetchone()
+    return row["attempts"] if row else 0
+
+
 def current_state(conn, tx_id: str, user_id: int, now: int) -> str | None:
     row = conn.execute(
         "SELECT state, canonical FROM transactions WHERE tx_id = ? AND user_id = ?", (tx_id, user_id)

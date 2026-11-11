@@ -82,9 +82,13 @@ def enroll_device(conn, token: str, public_key_raw: bytes, now: int) -> tuple[st
             audit(conn, now, row["user_id"] if row else None, None, "enroll_rejected", "invalid token")
             return None
         conn.execute("UPDATE enroll_tokens SET used = 1 WHERE token = ?", (token,))
+        # A session alone must never replace an enrolled device: otherwise a
+        # man-in-the-browser could enroll its own key and approve anything.
+        if conn.execute("SELECT 1 FROM devices WHERE user_id = ?", (row["user_id"],)).fetchone():
+            audit(conn, now, row["user_id"], None, "enroll_rejected", "device already enrolled")
+            return None
         device_id = str(uuid.uuid4())
         k_totp, k_hmac = secrets.token_bytes(20), secrets.token_bytes(32)
-        conn.execute("DELETE FROM devices WHERE user_id = ?", (row["user_id"],))
         conn.execute(
             "INSERT INTO devices (id, user_id, public_key, k_totp, k_hmac, last_totp_step, created_at) "
             "VALUES (?, ?, ?, ?, ?, NULL, ?)",

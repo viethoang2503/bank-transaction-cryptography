@@ -77,7 +77,9 @@ def parse_canonical(data: bytes) -> dict:
             parse_float=_reject_float,
             parse_constant=_reject_constant,
         )
-    except (UnicodeDecodeError, json.JSONDecodeError, TypeError) as exc:
+    except EncodingError:
+        raise
+    except (ValueError, TypeError, RecursionError) as exc:  # ValueError also covers over-long integers
         raise EncodingError("payload is not valid ASCII JSON") from exc
     if canonical_bytes(obj) != bytes(data):
         raise EncodingError("payload is not canonical")

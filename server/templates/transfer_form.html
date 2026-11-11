@@ -9,7 +9,6 @@
   <label>Amount (VND) <input name="amount" inputmode="numeric" required></label>
   <button>Continue</button>
 </form>
-<p><a href="/enroll">Enroll or replace authenticator</a></p>
 <script>
 document.getElementById("to").addEventListener("change", async (event) => {
   const r = await fetch("/api/lookup?account=" + encodeURIComponent(event.target.value));

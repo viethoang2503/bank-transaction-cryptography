@@ -106,3 +106,9 @@ def test_parse_rejects_non_canonical(data):
 def test_decode_qr_rejects_bad_payloads(payload):
     with pytest.raises(EncodingError):
         decode_qr_payload(payload)
+
+
+@pytest.mark.parametrize("data", [b'{"amount":' + b"9" * 5000 + b"}", b"[" * 100_000])
+def test_parse_rejects_pathological_json_with_encoding_error(data):
+    with pytest.raises(EncodingError):
+        parse_canonical(data)

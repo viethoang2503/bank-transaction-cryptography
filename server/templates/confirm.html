@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>Confirm transfer</h2>
+{% if error %}<p class="error" id="otp-error">{{ error }}</p>{% endif %}
 <dl>
   <dt>From</dt><dd>{{ tx["from"] }}</dd>
   <dt>To account</dt><dd id="to-account">{{ tx["to"] }}</dd>

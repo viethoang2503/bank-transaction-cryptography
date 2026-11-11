@@ -99,6 +99,8 @@ def create_app(settings: Settings | None = None, clock: Callable[[], int] | None
 
     @app.get("/enroll")
     def enroll_page(request: Request, user=Depends(require_user), conn=Depends(get_conn)):
+        if auth.device_for_user(conn, user["id"]) is not None:
+            return render(request, "enroll.html", status_code=409, user=user, payload=None, qr_svg=None)
         payload = "tbaenroll1:" + auth.create_enroll_token(conn, user["id"], clock(), settings.enroll_ttl)
         return render(request, "enroll.html", user=user, payload=payload, qr_svg=_qr_svg(payload))
 
@@ -117,16 +119,19 @@ def create_app(settings: Settings | None = None, clock: Callable[[], int] | None
             return render(request, "transfer_form.html", status_code=400, user=user, has_device=has_device, error=str(exc))
         return RedirectResponse(f"/transfer/{tx['tx_id']}", status_code=303)
 
+    def _confirm_page(request, tx, user, error=None, status_code=200):
+        qr_payload = None if settings.mode == "baseline" else encode_qr_payload(tx)
+        return render(request, "confirm.html", status_code=status_code, user=user, tx=tx, error=error,
+                      qr_payload=qr_payload, qr_svg=_qr_svg(qr_payload) if qr_payload else None,
+                      otp_digits=settings.totp_digits if settings.mode == "baseline" else settings.otp_digits,
+                      expires_in=max(0, tx["exp"] - clock()))
+
     @app.get("/transfer/{tx_id}")
     def transfer_confirm(request: Request, tx_id: str, user=Depends(require_user), conn=Depends(get_conn)):
         tx = transfers.get_tx_for_user(conn, tx_id, user["id"])
         if tx is None:
             raise HTTPException(status_code=404)
-        qr_payload = None if settings.mode == "baseline" else encode_qr_payload(tx)
-        return render(request, "confirm.html", user=user, tx=tx, qr_payload=qr_payload,
-                      qr_svg=_qr_svg(qr_payload) if qr_payload else None,
-                      otp_digits=settings.totp_digits if settings.mode == "baseline" else settings.otp_digits,
-                      expires_in=max(0, tx["exp"] - clock()))
+        return _confirm_page(request, tx, user)
 
     def _result_page(request, tx_id, user, conn, ok_status=200):
         tx = transfers.get_tx_for_user(conn, tx_id, user["id"])
@@ -139,9 +144,14 @@ def create_app(settings: Settings | None = None, clock: Callable[[], int] | None
     @app.post("/transfer/{tx_id}/otp")
     def transfer_otp(request: Request, tx_id: str, otp: str = Form(...),
                      user=Depends(require_user), conn=Depends(get_conn)):
-        if transfers.get_tx_for_user(conn, tx_id, user["id"]) is None:
+        tx = transfers.get_tx_for_user(conn, tx_id, user["id"])
+        if tx is None or settings.mode in verify.SIG_MODES:  # signature modes have no code to submit
             raise HTTPException(status_code=404)
         verify.confirm_otp(conn, settings, user["id"], tx_id, otp.replace(" ", "").strip(), clock())
+        if transfers.current_state(conn, tx_id, user["id"], clock()) == "pending":
+            left = settings.max_attempts - transfers.attempts_used(conn, tx_id, user["id"])
+            return _confirm_page(request, tx, user, status_code=400,
+                                 error=f"Incorrect code. {left} attempt{'s' if left != 1 else ''} left.")
         return _result_page(request, tx_id, user, conn)
 
     @app.get("/transfer/{tx_id}/result")

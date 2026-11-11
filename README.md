@@ -20,6 +20,8 @@ Phone setup (once):
 - iPhone: AirDrop `rootCA.pem` → Settings → Profile Downloaded → Install → Settings → General → About → Certificate Trust Settings → enable full trust.
 - Android: Settings → Security → Encryption & credentials → Install a certificate → CA certificate.
 
+A device can be enrolled only once per account. To enroll again (new phone, or after "Forget this device"), stop the server and run `make reset MODE=<mode>`; this wipes that mode's database.
+
 Then open `https://<LAN-IP>:8443/app/` on the phone and `https://localhost:8443/` on the laptop (log in as `alice` / `alice-pass`).
 
 Fallback if the phone cannot trust the CA: `cloudflared tunnel --url https://localhost:8443 --no-tls-verify` and use the printed `https://*.trycloudflare.com` URL on both devices.
