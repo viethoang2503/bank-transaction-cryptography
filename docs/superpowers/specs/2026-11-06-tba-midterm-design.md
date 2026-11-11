@@ -142,15 +142,19 @@ Mật khẩu băm bằng scrypt (n=2¹⁴, r=8, p=1). K_totp và K_hmac lưu pla
 
 **Giả định tin cậy:** TLS an toàn; server trung thực nhưng DB có thể bị lộ (chỉ đọc); điện thoại được tin cậy; lúc đăng ký thiết bị môi trường sạch.
 
-| Mã | Kẻ tấn công | Phạm vi |
-|---|---|---|
-| A1 | MitB: đọc và sửa mọi thứ trong trình duyệt | Trong |
-| A2 | Phishing proxy: chuyển tiếp mã theo thời gian thực | Trong |
-| A3 | Replay mã/chữ ký cũ | Trong |
-| A4 | Đoán mã online | Trong |
-| A5 | Có bản sao DB server | Trong |
-| A6 | Mã độc trên điện thoại | Ngoài (Discussion) |
-| A7 | Social engineering | Ngoài (Discussion) |
+| Mã | Kẻ tấn công | Phạm vi | Kịch bản |
+|---|---|---|---|
+| A1 | MitB: đọc và sửa mọi thứ trong trình duyệt | Trong | S2a, S2b, S3, S4 |
+| A2 | Phishing proxy: chuyển tiếp mã theo thời gian thực | Trong | S2a, S2b, S3, S4 (xem ghi chú) |
+| A3 | Replay mã/chữ ký cũ | Trong | S6, S7, S8 |
+| A4 | Đoán mã online | Trong | S9 |
+| A5 | Có bản sao DB server | Trong | S10 |
+| A6 | Mã độc trên điện thoại, hoặc máy tính và điện thoại cùng bị nhiễm | Ngoài (Discussion) | |
+| A7 | Social engineering | Ngoài (Discussion) | |
+
+**Ghi chú về A2.** Không có kịch bản riêng cho phishing proxy, vì trong mô hình này nó làm được đúng những việc lớp `Mitb` làm: đứng giữa người dùng và ngân hàng, sửa request chuyển tiền và sửa trang (kể cả QR) trả về cho người dùng. Khác biệt duy nhất là cách kẻ tấn công vào được vị trí đó (trang giả thay vì mã độc), và điều này không ảnh hưởng tới kết quả. Vì vậy mọi khẳng định về phishing thời gian thực trong report (RQ1) phải dẫn S2a/S2b/S3/S4 và nêu rõ lập luận tương đương này; không được viết như thể đã có thí nghiệm phishing riêng.
+
+**Ghi chú về A6.** Giả định "điện thoại tin cậy và tách biệt với máy tính" là giả định mạnh, và tài liệu đã cho thấy nó dễ mất: nhiễm chéo máy tính và điện thoại (Dmitrienko và cộng sự, FC 2014), đồng bộ giữa các nền tảng xóa khoảng cách giữa hai thiết bị (Konoth và cộng sự, FC 2016), ngân hàng và ứng dụng xác thực chạy trên cùng một điện thoại (Haupert và Müller, 2018). Chương 8 phải dẫn các bài này khi nêu A6 là ngoài phạm vi.
 
 | Mã | Mục tiêu | Kịch bản dùng để kiểm |
 |---|---|---|
@@ -159,12 +163,20 @@ Mật khẩu băm bằng scrypt (n=2¹⁴, r=8, p=1). K_totp và K_hmac lưu pla
 | G3 | Dùng một lần | S8 |
 | G4 | Chống đoán, **trong phạm vi một giao dịch** (không có giới hạn theo người dùng, xem Limitations) | S9 |
 | G5 | Chịu được lộ DB | S10 |
-| G6 | Chống chối bỏ | S11 |
-| G7 | WYSIWYS: người dùng đã thấy đúng T | S2a, S3 |
+| G6 | Bằng chứng kiểm chứng được bởi bên thứ ba (điều kiện cần, chưa đủ, của chống chối bỏ) | S11 |
+| G7 | WYSIWYS: người dùng đã thấy đúng T (với người dùng lý tưởng, xem mục 6) | S2a, S3 |
+
+**Giới hạn của G6 (bắt buộc ghi vào Chương 6 và Limitations).** S11 chỉ cho thấy bằng chứng lưu trong DB kiểm được bằng public key mà không cần khóa bí mật nào của ngân hàng. Nó chưa phải chống chối bỏ, vì hai lý do: (1) authenticator là web app do chính server ngân hàng phục vụ, nên ngân hàng có thể gửi JavaScript khác để dùng khóa ký cho giao dịch bất kỳ (khóa non-extractable chỉ chống *xuất* khóa, không chống *dùng* khóa); (2) public key chỉ nằm trong bảng `devices` của ngân hàng, không có bên độc lập nào chứng thực nó thuộc về người dùng, nên ngân hàng có thể thay khóa. Report dùng cụm *verifiable evidence*, không dùng *non-repudiation* cho kết quả của S11; ở `sig_blind` còn thêm chú thích dấu \* như dưới bảng kịch bản.
 
 ## 6. Kế hoạch đánh giá
 
 **Mô hình người dùng:** `attentive_user` đồng ý khi điện thoại không hiển thị gì (ký mù), hoặc khi `to` và `amount` hiển thị khớp với ý định. `careless_user` luôn đồng ý. Ở chế độ `baseline`, điện thoại không hiển thị giao dịch còn trình duyệt bị MitB làm giả, nên người dùng luôn nhập mã.
+
+**Giới hạn của mô hình người dùng (bắt buộc ghi vào Chương 6 và Limitations).** `attentive_user` là người dùng lý tưởng: luôn đọc và luôn phát hiện sai lệch. Người thật nằm giữa hai mô hình. Nghiên cứu của AlZomai và cộng sự (AISC 2008) trên ngân hàng mô phỏng báo cáo rằng một phần đáng kể tấn công vẫn qua được bước kiểm tra của người dùng, nhất là khi chỉ một chữ số tài khoản bị đổi; Haupert và Gabert (ESORICS 2019) khảo sát 100 khách hàng thật cũng với câu hỏi này. Hệ quả:
+- Ô `blocked` của S2a và S3, và dấu ✓ của G7, là **cận trên**: chúng nói cơ chế *cho phép* người dùng phát hiện, không nói người dùng *sẽ* phát hiện. S2b là cận dưới.
+- Kịch bản S2a đổi cả tài khoản nhận (khác nhiều chữ số), là trường hợp dễ phát hiện nhất.
+- Buổi usability P4 không có lần thử nào bị tấn công, nên không đo được tỷ lệ phát hiện. Report không được suy ra tỷ lệ này từ P4.
+- Số liệu cụ thể của hai nghiên cứu trên phải lấy từ bài gốc trước khi trích (bản review ngày 11/11 mới chỉ có số từ thông cáo báo chí: 21% tấn công lộ liễu và 61% tấn công kín thành công).
 
 **Kết quả mong đợi** (`blocked`/`ok`/`yes` = tốt; `succeeded`/`no` = xấu; `n/a` = không áp dụng):
 
@@ -186,6 +198,8 @@ Mật khẩu băm bằng scrypt (n=2¹⁴, r=8, p=1). K_totp và K_hmac lưu pla
 | S13 | Chữ ký dị dạng (server không được trả 5xx) | n/a | n/a | blocked | blocked |
 
 \* Với `sig_blind`, chữ ký chỉ chứng minh thiết bị đã ký, không chứng minh người dùng đã nhìn thấy giao dịch. Report phải ghi chú điểm này. `evaluation/latex.py` tự gắn dấu \* vào ô `sig_blind` của S11 và G6, kèm chú thích dưới bảng.
+
+Trong bảng trên, S11 trả lời câu hỏi "bên thứ ba có kiểm được bằng chứng không"; xem giới hạn của G6 ở mục 5.
 
 Thay đổi so với bản thảo trong chat: S6 ở `baseline` là `blocked` (vì baseline được cài đúng RFC, có chặn dùng lại bước thời gian); thêm S2b; G1 dùng S4/S5, còn G7 dùng S2a/S3, để tách bạch vai trò của *gắn mật mã* và *hiển thị*.
 
@@ -223,10 +237,12 @@ Vì vậy dấu ✓ của G4 trong bảng mục tiêu chỉ có nghĩa là "cơ 
 | 7 Performance & Usability | 1,5 | TV2 + TV4 + TV6 | F6, T7, T8 |
 | 8 Discussion & Limitations | 1,5 | TV1 + TV5 | |
 | 9 Conclusion | 0,5 | TV1 | |
-| References | 1 | Tất cả | IEEE, mỗi tài liệu đã kiểm tra bản gốc |
+| References | 1 | Tất cả | IEEE, mỗi tài liệu đã kiểm tra bản gốc; danh sách bắt buộc ở master plan Task R1 Step 4 |
 | Phụ lục A-E | | Tất cả | Repo, API, vectors, kết quả đầy đủ, bảng đóng góp |
 
-**Quy ước:** thuật ngữ thống nhất (*transaction binding*, *authenticator*, *challenge*, *blind-signing mode*); mọi số liệu lấy từ `results/`; mọi khẳng định về tấn công dẫn mã kịch bản; không chép nguyên văn từ nguồn.
+**Quy ước:** thuật ngữ thống nhất (*transaction binding*, *authenticator*, *challenge*, *blind-signing mode*, *verifiable evidence*); mọi số liệu lấy từ `results/`; mọi khẳng định về tấn công dẫn mã kịch bản; không chép nguyên văn từ nguồn.
+
+**Định vị so với tài liệu đã có (Ch.1 và Ch.2):** gắn mã xác thực vào giao dịch không phải ý tưởng mới. Nó đã được đề xuất và triển khai từ lâu (Hiltgen và cộng sự 2006; ZTIC 2008; chipTAN, photoTAN; chế độ chữ ký của OCRA, RFC 6287 mục 7.3; "dynamic linking" ở Điều 5 Quy định (EU) 2018/389; W3C Secure Payment Confirmation). Đóng góp của report là *cài đặt và so sánh có kiểm soát* bốn chế độ trên cùng một hệ thống, cùng thí nghiệm `sig_blind` tách vai trò của hiển thị khỏi vai trò của mật mã. Không viết rằng nhóm đề xuất cơ chế mới. Chế độ `hmac` là "kiểu OCRA", không phải OCRA đúng chuẩn (không có OCRASuite, không theo định dạng DataInput); RFC 4226, 6238 và 6287 đều là Informational.
 
 ## 8. Rủi ro
 
@@ -234,6 +250,7 @@ Vì vậy dấu ✓ của G4 trong bảng mục tiêu chỉ có nghĩa là "cơ 
 |---|---|
 | Web Crypto không chạy trên điện thoại | Cài root CA của mkcert lên điện thoại → tunnel `cloudflared` → laptop thứ hai (ghi vào Limitations) |
 | Tích hợp bị trễ | Phần đánh giá chạy trên `VirtualPhone`, không phụ thuộc điện thoại thật |
+| Trích dẫn quy định Việt Nam đã hết hiệu lực | Kiểm tra hiệu lực của Quyết định 2345/QĐ-NHNN trước khi trích (xem master plan Task R1 Step 4) |
 | Python và JS lệch nhau | `shared/vectors.json` được kiểm ở cả hai phía |
 | `mitmproxy` xung đột thư viện | Cài riêng bằng `pipx`; addon chỉ dùng stdlib (+ `segno` nếu giả QR) |
 

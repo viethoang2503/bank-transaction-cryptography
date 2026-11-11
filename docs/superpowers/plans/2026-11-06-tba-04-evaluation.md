@@ -860,7 +860,7 @@ def test_latex_tables_render():
     assert r"\begin{tabularx}{\linewidth}" in t and "S2a" in t and r"sig\_blind" in t and r"\xmark" in t
     g = goals_table(EXPECTED)
     assert "G7" in g and r"\cmark" in g
-    # sig_blind non-repudiation must carry the spec's asterisk and its note.
+    # sig_blind evidence must carry the spec's asterisk and its note.
     for table, row_id in ((t, "S11"), (g, "G6")):
         row = next(line for line in table.splitlines() if line.startswith(row_id + " "))
         assert row.rstrip(" \\").endswith(r"\cmark$^{*}$")
@@ -884,8 +884,10 @@ GOALS = {
     # S9 checks the per-transaction lockout only; there is no per-user limit (see Limitations).
     "G4": ("Guessing limit per transaction", ["S9"]),
     "G5": ("Resilience to server database leak", ["S10"]),
-    "G6": ("Non-repudiation", ["S11"]),
-    "G7": ("What you see is what you sign", ["S2a", "S3"]),
+    # S11 shows third-party verifiability only; this is necessary but not sufficient for non-repudiation (spec section 5).
+    "G6": ("Verifiable evidence (third party can check)", ["S11"]),
+    # Holds for the ideal attentive user only: an upper bound on real users (spec section 6).
+    "G7": ("What you see is what you sign (attentive user)", ["S2a", "S3"]),
 }
 
 
