@@ -59,6 +59,7 @@ function goHome() {
 
 async function startScan(onPayload) {
   show("scan");
+  $("paste").value = "";
   const deliver = (payload) => { if (state.stopScan) state.stopScan(); onPayload(payload); };
   $("btn-paste").onclick = () => { const v = $("paste").value.trim(); if (v) deliver(v); };
   let stream;
