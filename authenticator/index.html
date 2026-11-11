@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TBA Authenticator</title>
+<link rel="stylesheet" href="app.css">
+<script src="vendor/jsQR.js"></script>
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+<header><h1>TBA Authenticator</h1><span id="mode-badge"></span></header>
+<main>
+  <section id="view-enroll" hidden>
+    <p>This device is not enrolled. Log in to the bank website, open “Enroll authenticator” and scan the QR code.</p>
+    <button id="btn-scan-enroll">Scan enrollment QR</button>
+  </section>
+
+  <section id="view-home" hidden>
+    <p>Device <code id="device-id"></code></p>
+    <div id="totp-box" hidden>
+      <p>Your one-time code</p>
+      <p class="code" id="totp-code"></p>
+      <p id="totp-ttl"></p>
+    </div>
+    <button id="btn-scan-tx">Scan transaction QR</button>
+    <button id="btn-bench" class="secondary">Run signing benchmark</button>
+    <button id="btn-reset" class="danger">Forget this device</button>
+  </section>
+
+  <section id="view-scan" hidden>
+    <video id="video" playsinline muted></video>
+    <canvas id="canvas" hidden></canvas>
+    <details><summary>Paste payload instead</summary>
+      <textarea id="paste" rows="3"></textarea>
+      <button id="btn-paste">Use pasted payload</button>
+    </details>
+    <button id="btn-cancel-scan" class="secondary">Cancel</button>
+  </section>
+
+  <section id="view-tx" hidden>
+    <div id="tx-details">
+      <h2>Confirm transfer</h2>
+      <dl>
+        <dt>Amount</dt><dd id="tx-amount" class="big"></dd>
+        <dt>To account</dt><dd id="tx-to" class="big"></dd>
+        <dt>Recipient</dt><dd id="tx-name"></dd>
+        <dt>From</dt><dd id="tx-from"></dd>
+        <dt>Expires in</dt><dd id="tx-exp"></dd>
+      </dl>
+    </div>
+    <div id="tx-blind" hidden>
+      <h2>Approve pending transaction?</h2>
+      <p>A transaction is waiting for your approval.</p>
+    </div>
+    <div id="tx-otp" hidden>
+      <p>Enter this code on the bank website:</p>
+      <p class="code" id="tx-otp-code"></p>
+    </div>
+    <div id="tx-actions">
+      <button id="btn-approve">Approve</button>
+      <button id="btn-reject" class="danger">Reject</button>
+    </div>
+    <p id="tx-result"></p>
+    <button id="btn-home" class="secondary">Back</button>
+  </section>
+
+  <section id="view-bench" hidden>
+    <p id="bench-result"></p>
+    <button id="btn-bench-back" class="secondary">Back</button>
+  </section>
+
+  <p id="error" class="error"></p>
+</main>
+</body>
+</html>

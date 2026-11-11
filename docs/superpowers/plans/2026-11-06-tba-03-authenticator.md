@@ -636,7 +636,7 @@ $("btn-reject").onclick = reject;
 $("btn-bench").onclick = () => bench().catch(fail);
 $("btn-bench-back").onclick = goHome;
 $("btn-reset").onclick = async () => {
-  if (!confirm("Forget this device?")) return;
+  if (!confirm("Forget this device? The bank will not let this account enroll again until its database is reset (make reset).")) return;
   await store.clear();
   state.device = null;
   goHome();

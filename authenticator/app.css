@@ -1,0 +1,16 @@
+body { font-family: system-ui, sans-serif; margin: 0; color: #1a1a1a; }
+header { display: flex; justify-content: space-between; align-items: center; padding: .5rem 1rem; background: #123; color: #fff; }
+header h1 { font-size: 1.1rem; margin: 0; }
+#mode-badge { font-family: monospace; background: #345; padding: .1rem .4rem; border-radius: .3rem; }
+main { padding: 1rem; max-width: 30rem; margin: auto; }
+button { display: block; width: 100%; font-size: 1.1rem; padding: .8rem; margin: .5rem 0; border: 0; border-radius: .5rem; background: #1565c0; color: #fff; }
+button.secondary { background: #607d8b; }
+button.danger { background: #c62828; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: .4rem 1rem; }
+dt { color: #555; }
+dd { margin: 0; font-weight: 600; }
+.big { font-size: 1.4rem; }
+.code { font-family: monospace; font-size: 2.2rem; letter-spacing: .15rem; text-align: center; }
+.error { color: #b00020; }
+video { width: 100%; border-radius: .5rem; background: #000; }
+textarea { width: 100%; }
