@@ -1,0 +1,9 @@
+operation,n,median_us,p95_us
+canonical_encode,10000,3.58,3.79
+totp,10000,1.62,1.75
+hmac_otp,10000,5.29,5.46
+hmac_otp_verify,10000,5.46,5.58
+ecdsa_p256_sign,10000,18.54,19.96
+ecdsa_p256_verify,10000,45.71,49.92
+ed25519_sign,10000,25.04,29.42
+ed25519_verify,10000,67.67,76.58

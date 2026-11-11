@@ -1,0 +1,10 @@
+item,value
+TOTP code (digits),6
+Transaction OTP (digits),8
+"ECDSA P-256 signature, raw (bytes)",64
+"ECDSA P-256 signature, DER min (bytes)",69
+"ECDSA P-256 signature, DER max (bytes)",72
+Ed25519 signature (bytes),64
+Canonical transaction (bytes),199
+QR payload (characters),271
+QR version (error level M),12
