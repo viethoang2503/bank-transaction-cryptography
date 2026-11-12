@@ -175,7 +175,7 @@ Mật khẩu băm bằng scrypt (n=2¹⁴, r=8, p=1). K_totp và K_hmac lưu pla
 **Giới hạn của mô hình người dùng (bắt buộc ghi vào Chương 6 và Limitations).** `attentive_user` là người dùng lý tưởng: luôn đọc và luôn phát hiện sai lệch. Người thật nằm giữa hai mô hình. Nghiên cứu của AlZomai và cộng sự (AISC 2008) trên ngân hàng mô phỏng báo cáo rằng một phần đáng kể tấn công vẫn qua được bước kiểm tra của người dùng, nhất là khi chỉ một chữ số tài khoản bị đổi; Haupert và Gabert (ESORICS 2019) khảo sát 100 khách hàng thật cũng với câu hỏi này. Hệ quả:
 - Ô `blocked` của S2a và S3, và dấu ✓ của G7, là **cận trên**: chúng nói cơ chế *cho phép* người dùng phát hiện, không nói người dùng *sẽ* phát hiện. S2b là cận dưới.
 - Kịch bản S2a đổi cả tài khoản nhận (khác nhiều chữ số), là trường hợp dễ phát hiện nhất.
-- Buổi usability P4 không có lần thử nào bị tấn công, nên không đo được tỷ lệ phát hiện. Report không được suy ra tỷ lệ này từ P4.
+- Buổi usability P4 đã bị lược bỏ; kể cả khi còn, nó không có lần thử nào bị tấn công nên không đo được tỷ lệ phát hiện. Report không được suy ra tỷ lệ phát hiện từ thử nghiệm của nhóm.
 - Số liệu cụ thể của hai nghiên cứu trên phải lấy từ bài gốc trước khi trích (bản review ngày 11/11 mới chỉ có số từ thông cáo báo chí: 21% tấn công lộ liễu và 61% tấn công kín thành công).
 
 **Kết quả mong đợi** (`blocked`/`ok`/`yes` = tốt; `succeeded`/`no` = xấu; `n/a` = không áp dụng):
@@ -216,7 +216,7 @@ Vì vậy dấu ✓ của G4 trong bảng mục tiêu chỉ có nghĩa là "cơ 
 - P1: median và p95 (10.000 lần) cho canonical, TOTP, HMAC-OTP, ECDSA ký/verify, Ed25519 ký/verify, kèm thông tin máy.
 - P2: thời gian ký trên điện thoại (200 lần, `performance.now()`).
 - P3: kích thước dữ liệu và phiên bản QR.
-- P4: thời gian hoàn thành giao dịch, 6 người × 4 chế độ × 3 lần.
+- P4 (thời gian hoàn thành giao dịch, 6 người): ĐÃ LƯỢC BỎ khỏi phạm vi bài.
 
 **Đầu ra:** `make eval` ghi vào `results/`: `scenarios.csv`, `scenarios.tex`, `goals.tex`, `bench.csv`, `bench.pdf`, `bench_env.json`, `sizes.csv`, `bruteforce.csv`, `bruteforce.pdf`.
 
