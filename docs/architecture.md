@@ -78,7 +78,7 @@ sequenceDiagram
   P->>P: importKey(HMAC, non-extractable), lưu vào IndexedDB
 ```
 
-Lưu ý khi viết Chương 4 và 5: chỉ khóa riêng ECDSA là không bao giờ rời điện thoại (sinh tại chỗ, `extractable = false`). `k_totp` và `k_hmac` là bí mật dùng chung: server sinh, gửi dạng rõ trong JSON và lưu dạng rõ trong bảng `devices`. "Non-extractable" chỉ đúng với bản sao trên điện thoại *sau khi* `importKey`. Đây cũng là lý do S10 phá được `baseline` và `hmac`. Server hiện sinh và gửi cả hai khóa này ở mọi chế độ, kể cả `sig`/`sig_blind`.
+Lưu ý khi viết Chương 4 và 5: chỉ với khóa riêng ECDSA thì ứng dụng không export cũng không gửi khóa lên server (sinh tại chỗ, `extractable = false`, nên không lấy lại được byte khóa qua Web Crypto API). `k_totp` và `k_hmac` là bí mật dùng chung: server sinh, gửi dạng rõ trong JSON và lưu dạng rõ trong bảng `devices`. "Non-extractable" chỉ đúng với bản sao trên điện thoại *sau khi* `importKey`. Đây cũng là lý do S10 phá được `baseline` và `hmac`. Server hiện sinh và gửi cả hai khóa này ở mọi chế độ, kể cả `sig`/`sig_blind`.
 
 ## 4. Xác nhận giao dịch, 4 chế độ (Hình F3)
 
@@ -170,7 +170,7 @@ stateDiagram-v2
   expired --> [*]
 ```
 
-Mọi chuyển trạng thái đều nằm trong một `BEGIN IMMEDIATE`. Vì vậy hai yêu cầu đồng thời không thể cùng thấy `pending` (S8).
+Các chuyển trạng thái trong luồng xác nhận (`pending → executed/failed/expired`) đều nằm trong một `BEGIN IMMEDIATE`, nên hai yêu cầu đồng thời không thể cùng thấy `pending` (S8). Ngoại lệ: khi polling `/transfer/{tx_id}/status`, việc đánh dấu `pending → expired` là một câu `UPDATE ... WHERE state = 'pending'` đơn chạy ở chế độ autocommit (`db.py` đặt `isolation_level=None`); câu lệnh đơn này vẫn nguyên tử và idempotent, nên không phá vỡ bất biến trên.
 
 ## 6. Mô hình dữ liệu
 

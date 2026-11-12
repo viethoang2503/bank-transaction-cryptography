@@ -25,9 +25,14 @@ and we do not infer a detection rate from our own trials.
 \paragraph{Guessing limit is per transaction (G4).}
 As quantified in \cref{sec:eval}, the lockout is per transaction with no per-user
 counter and no cap on transaction creation, so $k$ transactions give about
-$k\cdot p$ cumulative success. This is weak for \texttt{baseline} and is closed
-only by a per-user/per-device counter and a creation rate limit, which introduce
-a denial-of-service trade-off.
+$k\cdot p$ cumulative success. This $k\cdot p$ figure is an \emph{idealised}
+analytic bound that assumes the valid-code window stays fixed over the whole
+guessing campaign; for \texttt{baseline} the TOTP code rotates every $30$~s, so
+tens of thousands of transactions inside a single window is not a measured,
+realistic capability --- only the per-transaction probabilities in
+\cref{tab:bruteforce} are measured. This is weak for \texttt{baseline} and is
+closed only by a per-user/per-device counter and a creation rate limit, which
+introduce a denial-of-service trade-off.
 
 \paragraph{Verifiable evidence is not non-repudiation (G6).}
 The signature is checkable by a third party, but because the authenticator is

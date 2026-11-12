@@ -14,8 +14,8 @@
 
 - Encoding phải cho ra đúng chuỗi byte như `tba_core/encoding.py` (kiểm bằng `shared/vectors.json`).
 - Domain tag `"TBA-HMAC-v1"` và `"TBA-SIG-v1"`, nối với canonical bằng byte `0x00`.
-- Khóa ký P-256 sinh ngay trên điện thoại với `extractable = false`: khóa riêng không bao giờ được xuất ra qua Web Crypto API (bảo vệ ở mức API trình duyệt, không có phần cứng bảo vệ).
-- `k_totp` và `k_hmac` là **khóa bí mật dùng chung**: server sinh, gửi dạng rõ trong JSON của `POST /api/device/enroll` (qua HTTPS) và lưu dạng rõ trong bảng `devices`. Điện thoại import chúng với `extractable = false`, nên chỉ *sau khi import* thì JS không đọc lại được byte khóa. Không được viết rằng khóa HMAC "không bao giờ rời thiết bị" (xem S10: lộ DB thì `hmac` bị phá).
+- Khóa ký P-256 sinh ngay trên điện thoại với `extractable = false`: khóa riêng không export được qua Web Crypto API (bảo vệ ở mức API trình duyệt; không bảo đảm có phần cứng bảo vệ, vì việc hậu thuẫn phần cứng tùy thiết bị và trình duyệt).
+- `k_totp` và `k_hmac` là **khóa bí mật dùng chung**: server sinh, gửi dạng rõ trong JSON của `POST /api/device/enroll` (qua HTTPS) và lưu dạng rõ trong bảng `devices`. Điện thoại import chúng với `extractable = false`, nên không export được byte khóa *từ đối tượng `CryptoKey`* đó. Lưu ý `importKey` không xóa bản gốc: byte khóa vẫn còn trong đối tượng response (`res.k_totp`, `res.k_hmac`) trong bộ nhớ JS cho tới khi bị thu hồi. Không được viết rằng khóa HMAC "không bao giờ rời thiết bị" (xem S10: lộ DB thì `hmac` bị phá).
 - Chế độ `sig_blind` **không được** hiển thị bất kỳ trường nào của giao dịch.
 - Giao diện tiếng Anh.
 

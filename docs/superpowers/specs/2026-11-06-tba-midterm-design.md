@@ -2,7 +2,7 @@
 
 **Môn:** Introduction to Cryptography (USTH), midterm project
 **Tên đề (ghi đúng nguyên văn trên bìa):** *Transaction-Bound Authentication for Online Banking: Implementation and Security Evaluation*
-**Nhóm:** 6 thành viên, 10 ngày (giả định ngày 1 = 07/11/2026, hạn nộp = 16/11/2026, cần xác nhận lại)
+**Nhóm:** 6 thành viên, 10 ngày (ngày 1 = 07/11/2026, hạn nộp = 16/11/2026)
 **Yêu cầu của giảng viên:** nộp report dạng PDF; trang bìa có tên đề, danh sách thành viên và mã sinh viên (kiểm tra kỹ danh sách); leader là người nộp.
 
 Kiến trúc chi tiết và sơ đồ: xem `docs/architecture.md`.
@@ -162,9 +162,11 @@ Mật khẩu băm bằng scrypt (n=2¹⁴, r=8, p=1). K_totp và K_hmac lưu pla
 | G2 | Tính tươi | S6, S7 |
 | G3 | Dùng một lần | S8 |
 | G4 | Chống đoán, **trong phạm vi một giao dịch** (không có giới hạn theo người dùng, xem Limitations) | S9 |
-| G5 | Chịu được lộ DB | S10 |
+| G5 | Chịu được lộ DB (lộ dữ liệu khóa trong bảng `devices`, thiết bị đã đăng ký giữ nguyên) | S10 |
 | G6 | Bằng chứng kiểm chứng được bởi bên thứ ba (điều kiện cần, chưa đủ, của chống chối bỏ) | S11 |
 | G7 | WYSIWYS: người dùng đã thấy đúng T (với người dùng lý tưởng, xem mục 6) | S2a, S3 |
+
+**Phạm vi của G5 (S10).** S10 chỉ xét *lộ dữ liệu khóa trong DB* (đọc được bảng `devices`) khi thiết bị đăng ký vẫn giữ nguyên: ở `sig`/`sig_blind`, DB chỉ chứa *public key* nên không giả mạo được chữ ký. Một mối đe dọa *khác* là kẻ chiếm được session hợp lệ rồi đăng ký lại thiết bị bằng khóa của mình — mối này được chặn riêng ở tầng đăng ký, không thuộc G5: `server/auth.py` từ chối (`enroll_rejected`, "device already enrolled") và `GET /enroll` trả 409 khi user đã có thiết bị, nên một session đơn thuần không thể thay khóa (xem mục Enrolment, A1).
 
 **Giới hạn của G6 (bắt buộc ghi vào Chương 6 và Limitations).** S11 chỉ cho thấy bằng chứng lưu trong DB kiểm được bằng public key mà không cần khóa bí mật nào của ngân hàng. Nó chưa phải chống chối bỏ, vì hai lý do: (1) authenticator là web app do chính server ngân hàng phục vụ, nên ngân hàng có thể gửi JavaScript khác để dùng khóa ký cho giao dịch bất kỳ (khóa non-extractable chỉ chống *xuất* khóa, không chống *dùng* khóa); (2) public key chỉ nằm trong bảng `devices` của ngân hàng, không có bên độc lập nào chứng thực nó thuộc về người dùng, nên ngân hàng có thể thay khóa. Report dùng cụm *verifiable evidence*, không dùng *non-repudiation* cho kết quả của S11; ở `sig_blind` còn thêm chú thích dấu \* như dưới bảng kịch bản.
 
@@ -203,12 +205,16 @@ Trong bảng trên, S11 trả lời câu hỏi "bên thứ ba có kiểm đượ
 
 Thay đổi so với bản thảo trong chat: S6 ở `baseline` là `blocked` (vì baseline được cài đúng RFC, có chặn dùng lại bước thời gian); thêm S2b; G1 dùng S4/S5, còn G7 dùng S2a/S3, để tách bạch vai trò của *gắn mật mã* và *hiển thị*.
 
+Phạm vi kiểm thử: phần lớn kịch bản chạy end-to-end qua `TestClient` của server, nhưng **S5, S12 và S13 là kiểm offline** thực thi trực tiếp trên lõi `tba_core`/harness (sửa từng trường rồi kiểm lại mã, 14 payload QR dị dạng, chữ ký r‖s dị dạng) chứ không đi qua HTTP; chúng kiểm bất biến của hàm mã hóa/verify, không phải hành vi tầng web.
+
 **Thí nghiệm brute-force (S9):** mô phỏng 100.000 giao dịch với OTP 3 và 4 chữ số, mỗi giao dịch đoán 3 lần; so sánh với lý thuyết `3/10^d` (hmac) và `1 − C(10^d−3,3)/C(10^d,3)` (baseline, cửa sổ 3 mã); ngoại suy lý thuyết cho d = 6 và 8. Mọi con số là **xác suất trên mỗi giao dịch**.
 
 **Giới hạn của G4 (bắt buộc ghi vào Chương 6 và mục Limitations ở Chương 8):** giới hạn 3 lần thử tính theo từng giao dịch (`server/verify.py`, `settings.max_attempts`), không có bộ đếm theo người dùng hay thiết bị, và `create_transfer` không giới hạn số giao dịch đang chờ. Kẻ A4 (có mật khẩu, không có điện thoại) có thể tạo k giao dịch, mỗi giao dịch đoán 3 lần, nên xác suất thành công cộng dồn xấp xỉ k·p:
 - `baseline` (6 chữ số, cửa sổ 3 mã): p ≈ 9,0·10⁻⁶ mỗi giao dịch; khoảng 7,7·10⁴ giao dịch cho 50%.
 - `hmac` (8 chữ số): p = 3·10⁻⁸ mỗi giao dịch; khoảng 2,3·10⁷ giao dịch cho 50%.
 - `sig`/`sig_blind`: phải giả mạo chữ ký ECDSA, không đoán được.
+
+Đây là **mô hình lý tưởng**: các con số cộng dồn k·p chỉ là cận trên giải tích, giả định cửa sổ mã giữ nguyên trong suốt chiến dịch đoán. Riêng với `baseline`, mã TOTP đổi mỗi 30 giây, nên không được diễn giải hàng chục nghìn giao dịch trong *một* cửa sổ TOTP là năng lực thực tế đã được đo; nếu đoán không lặp trong một cửa sổ cố định thì mốc 50% theo mô hình không-lặp (`1 − C(10⁶−3,3k)/C(10⁶,3k)`) rơi vào khoảng 6,9·10⁴ giao dịch, hơi thấp hơn xấp xỉ có-lặp 7,7·10⁴ ở trên. Con số thực nghiệm đo được trong `results/bruteforce.csv` chỉ là **xác suất trên mỗi giao dịch**, không phải tỷ lệ cộng dồn.
 
 Vì vậy dấu ✓ của G4 trong bảng mục tiêu chỉ có nghĩa là "cơ chế khóa theo giao dịch hoạt động". Cách khắc phục (ngoài phạm vi): bộ đếm sai theo người dùng hoặc thiết bị và giới hạn tốc độ tạo giao dịch. Cách này có đánh đổi: kẻ có mật khẩu có thể cố tình đoán sai để khóa tài khoản nạn nhân (DoS).
 
