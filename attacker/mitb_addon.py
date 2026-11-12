@@ -8,7 +8,8 @@ Environment:
   MITB_ACCOUNT   attacker account (default 0999888777)
   MITB_NAME      attacker display name (default LE VAN M)
   MITB_FORGE_QR  "1" to also replace the QR with one showing the intended
-                 recipient (scenario S4; needs `pipx inject mitmproxy segno`)
+                 recipient (scenario S4; needs segno in mitmproxy's interpreter,
+                 i.e. run mitmdump from the project venv: pip install -e ".[attack]")
 
 Only stdlib (+ optional segno) is used because mitmproxy runs in its own environment.
 """

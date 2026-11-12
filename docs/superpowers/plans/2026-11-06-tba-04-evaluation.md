@@ -1092,7 +1092,8 @@ Environment:
   MITB_ACCOUNT   attacker account (default 0999888777)
   MITB_NAME      attacker display name (default LE VAN M)
   MITB_FORGE_QR  "1" to also replace the QR with one showing the intended
-                 recipient (scenario S4; needs `pipx inject mitmproxy segno`)
+                 recipient (scenario S4; needs segno in mitmproxy's interpreter,
+                 i.e. run mitmdump from the project venv: pip install -e ".[attack]")
 
 Only stdlib (+ optional segno) is used because mitmproxy runs in its own environment.
 """
@@ -1195,9 +1196,11 @@ Expected: PASS
 
 Setup (once):
 ```bash
-pipx install mitmproxy
-pipx inject mitmproxy segno     # only for MITB_FORGE_QR=1
+pip install -e ".[attack]"      # installs mitmproxy into the project venv
 ```
+Run `mitmdump` from this same venv. The addon needs `segno` (a project dependency)
+in the *same* interpreter as mitmproxy for `MITB_FORGE_QR=1`, so a standalone
+mitmproxy (e.g. the Homebrew cask) will skip the QR forgery with a logged warning.
 
 For each mode (`hmac`, `sig`, `sig_blind`, `baseline`):
 1. `make run MODE=<mode>` and enroll the phone (Forget device first when switching mode; if that mode already has a device, run `make reset MODE=<mode>` before starting the server).

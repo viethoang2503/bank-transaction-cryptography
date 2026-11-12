@@ -2,9 +2,11 @@
 
 Setup (once):
 ```bash
-pipx install mitmproxy
-pipx inject mitmproxy segno     # only for MITB_FORGE_QR=1
+pip install -e ".[attack]"      # installs mitmproxy into the project venv
 ```
+Run `mitmdump` from this same venv. The addon needs `segno` (a project dependency)
+in the *same* interpreter as mitmproxy for `MITB_FORGE_QR=1`, so a standalone
+mitmproxy (e.g. the Homebrew cask) will skip the QR forgery with a logged warning.
 
 For each mode (`hmac`, `sig`, `sig_blind`, `baseline`):
 1. `make run MODE=<mode>` and enroll the phone (Forget device first when switching mode; if that mode already has a device, run `make reset MODE=<mode>` before starting the server).

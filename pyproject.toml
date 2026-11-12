@@ -17,6 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "httpx>=0.27", "matplotlib>=3.8"]
+attack = ["mitmproxy>=10"]   # live man-in-the-browser demo (attacker/mitb_addon.py)
 
 [tool.setuptools]
 packages = ["tba_core", "server", "evaluation"]
