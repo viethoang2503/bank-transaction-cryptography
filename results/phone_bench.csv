@@ -1,0 +1,2 @@
+device,browser,n,mean_ms,median_ms,p95_ms
+iPhone (model TBD),Safari 26.5,200,0.290,0.00,1.00
