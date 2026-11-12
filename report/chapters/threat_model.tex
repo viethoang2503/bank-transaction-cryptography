@@ -1,0 +1,95 @@
+\section{Threat Model and Security Goals}\label{sec:threat}
+
+\subsection{Trust assumptions}
+We assume that TLS is secure; that the bank server is honest but its database
+may leak (read-only exposure); that the phone running the authenticator is
+trusted; and that the environment is clean at the moment of device enrolment
+(trust on first use). These assumptions are discussed, and their fragility noted,
+in \cref{sec:discussion}.
+
+\subsection{Attacker capabilities}
+\Cref{tab:attackers} lists the attacker capabilities in scope. The scenarios in
+the last column (\cref{sec:eval}) exercise each capability.
+
+\begin{table}[htbp]
+\centering
+\caption{Attacker capabilities.}
+\label{tab:attackers}
+\small
+\begin{tabularx}{\linewidth}{@{}clXl@{}}
+\toprule
+ID & Attacker & Capability & Scenarios \\
+\midrule
+A1 & Man-in-the-browser     & Reads and rewrites everything in the browser & S2a, S2b, S3, S4 \\
+A2 & Real-time phishing proxy & Relays and rewrites traffic in real time & S2a, S2b, S3, S4 (see note) \\
+A3 & Replay                 & Re-uses an old code or signature & S6, S7, S8 \\
+A4 & Online guessing        & Guesses codes against the live server & S9 \\
+A5 & Database theft         & Holds a copy of the server database & S10 \\
+A6 & Malware on the phone   & Compromises the phone, or PC and phone together & out of scope \\
+A7 & Social engineering     & Persuades the user to approve & out of scope \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Note on A2 (equivalence to A1).}
+We give the phishing proxy no separate scenario because, in this model, it can do
+exactly what the MitB layer does: stand between the user and the bank, rewrite
+the transfer request, and rewrite the returned page (including the QR code). The
+only difference is how the attacker reaches that position (a fake site versus
+malware), which does not change the outcome. Every claim about real-time
+phishing in this report (RQ1) therefore refers to scenarios S2a/S2b/S3/S4 and
+relies on this equivalence; we did \emph{not} run a separate phishing
+experiment.
+
+\paragraph{Note on A6 (phone compromise, out of scope).}
+The assumption that the phone is trusted and separate from the PC is a strong
+one, and the literature shows it is easily lost: cross-infection of PC and phone
+\cite{dmitrienko2014}, cross-platform synchronisation that erases the gap between
+the two devices \cite{konoth2016}, and the bank app and authenticator running on
+the same phone \cite{haupert2018}. We treat A6 as out of scope and return to it
+in \cref{sec:discussion}.
+
+\subsection{Security goals}
+\Cref{tab:goals} states the goals the modes are measured against. Two goals carry
+limitations that are important enough to state up front.
+
+\begin{table}[htbp]
+\centering
+\caption{Security goals and the scenarios that test them.}
+\label{tab:goals}
+\small
+\begin{tabularx}{\linewidth}{@{}clX l@{}}
+\toprule
+ID & Goal & Meaning & Tested by \\
+\midrule
+G1 & Authorization integrity & Server executes $T$ only if the device produced a code for exactly $T$ & S4, S5 \\
+G2 & Freshness               & No replay, no late use & S6, S7 \\
+G3 & Single use              & One code, one execution, even under concurrency & S8 \\
+G4 & Guessing limit          & Bounded guessing \emph{per transaction} (see limitation) & S9 \\
+G5 & DB-leak resilience      & A leaked database does not let the attacker forge transfers & S10 \\
+G6 & Verifiable evidence     & A third party can check the evidence (necessary, not sufficient, for non-repudiation) & S11 \\
+G7 & WYSIWYS                 & The user saw exactly $T$ (idealised attentive user) & S2a, S3 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Limitation of G6 (verifiable evidence, not non-repudiation).}
+Scenario S11 shows only that the evidence stored in the database can be checked
+with a public key, without any secret of the bank's. It is \emph{not}
+non-repudiation, for two reasons. First, the authenticator is a web application
+served by the bank itself, so the bank could serve different JavaScript that uses
+the signing key for an arbitrary transaction; a non-extractable key prevents
+\emph{exporting} the key, not \emph{using} it. Second, the public key lives only
+in the bank's \texttt{devices} table, with no independent party attesting that it
+belongs to the user, so the bank could substitute a key. We therefore write
+\emph{verifiable evidence}, not \emph{non-repudiation}, for S11, and mark the
+\texttt{sig\_blind} cell with an asterisk (the signature proves the device
+signed, not that the user saw the transaction).
+
+\paragraph{Limitation of G4 (per-transaction, not per-user).}
+The three-attempt limit is enforced per transaction (\texttt{server/verify.py},
+\texttt{settings.max\_attempts}); there is no per-user or per-device counter, and
+transaction creation is not rate-limited. An attacker with the password but no
+phone (A4) can create $k$ transactions and guess three times each, so the
+cumulative success probability is about $k\cdot p$. This limitation is quantified
+in \cref{sec:eval}.

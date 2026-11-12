@@ -1,0 +1,29 @@
+\section{Conclusion}\label{sec:conclusion}
+
+We built a demo bank with four interchangeable transaction-authentication modes
+and evaluated them under one threat model with an automated harness, a live
+man-in-the-browser demonstration, an online-guessing experiment, and
+micro-benchmarks, with every number produced by \texttt{make eval}.
+
+The measurements answer the research questions. \textbf{RQ1:} binding the code to
+the transaction stops the recipient and amount tampering that a plain OTP lets
+through --- \texttt{hmac} and \texttt{sig} block S2a, S3, S4 and S5, which
+\texttt{baseline} does not --- and, by the A1/A2 equivalence, this covers
+real-time phishing as well. \textbf{RQ2:} asymmetric signatures add what a
+symmetric code cannot --- survival of a database leak (S10) and
+third-party--verifiable evidence (S11) --- because the key never leaves the
+phone, at a signing cost of about $19\,\mu s$ on the host and under a millisecond
+on a phone. \textbf{RQ3:} the trusted display is a separate and necessary layer:
+\texttt{sig\_blind}, with identical cryptography but no display, fails exactly the
+attacks an attentive user would otherwise catch.
+
+The honest reading is equally important: the guessing limit is only per
+transaction, ``verifiable evidence'' is not non-repudiation, the symmetric keys
+would need an HSM, and the attentive-user result is an upper bound. The strongest
+cryptography does not protect a user who is shown nothing, or who does not look.
+
+Future work follows the limitations: a per-user guessing counter with a
+rate-limited creation path, an HSM for the symmetric keys, an out-of-band
+enrolment and recovery flow, independent attestation of the signing key to move
+from verifiable evidence toward non-repudiation, and a proper user study to
+replace the idealised attentive-user model with measured detection rates.

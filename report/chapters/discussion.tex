@@ -1,0 +1,62 @@
+\section{Discussion and Limitations}\label{sec:discussion}
+
+\subsection{What each layer buys}
+Reading the matrix (\cref{tab:scenarios,tab:goalsummary}) top to bottom gives a
+clear ordering. Transaction binding is the decisive step for RQ1: it turns the
+recipient and amount swaps from \xmark{} to \cmark{} (S2a, S3, S4, S5), which a
+plain OTP cannot do. Moving from a symmetric code to an asymmetric signature
+(RQ2) adds two properties: resilience to a database leak (S10) and
+third-party--verifiable evidence (S11), because the secret never leaves the
+phone. The trusted display (RQ3) is independent of both: \texttt{sig} and
+\texttt{sig\_blind} share identical cryptography, yet \texttt{sig\_blind} fails
+S2a and S3 --- the strongest cryptography is wasted if the user is shown nothing
+to check. The careless-user column (S2b) is the sobering bound: no mechanism in
+this study defends a user who approves without looking.
+
+\subsection{Limitations}
+\paragraph{Attentive-user model.}
+The attentive user is idealised: always reads, always notices. Real users sit
+between this and the careless model, and the literature shows a meaningful share
+of tampered transactions are approved, especially when only a digit or two of the
+account changes~\cite{alzomai2008,haupert2019}. The \cmark{} cells of S2a, S3 and
+G7 are therefore an \emph{upper bound} on security; we did not run a user study,
+and we do not infer a detection rate from our own trials.
+
+\paragraph{Guessing limit is per transaction (G4).}
+As quantified in \cref{sec:eval}, the lockout is per transaction with no per-user
+counter and no cap on transaction creation, so $k$ transactions give about
+$k\cdot p$ cumulative success. This is weak for \texttt{baseline} and is closed
+only by a per-user/per-device counter and a creation rate limit, which introduce
+a denial-of-service trade-off.
+
+\paragraph{Verifiable evidence is not non-repudiation (G6).}
+The signature is checkable by a third party, but because the authenticator is
+served by the bank and the public key is attested by no independent party, the
+bank is not cryptographically bound by it. We claim only verifiable evidence.
+
+\paragraph{Symmetric keys in the clear (G5).}
+$K_{\text{totp}}$ and $K_{\text{hmac}}$ are stored in plaintext to make S10
+concrete. A real deployment must hold them in an HSM; this is why \texttt{hmac}
+is \xmark{} for S10/S11 here.
+
+\paragraph{Trusted, separate phone (A6).}
+The whole scheme rests on the phone being trusted and separate from the PC. This
+is fragile: PC--phone cross-infection~\cite{dmitrienko2014}, cross-platform
+synchronisation~\cite{konoth2016}, and running the bank app and the authenticator
+on one phone~\cite{haupert2018} all erase the gap. A6 (phone malware) is out of
+scope, and the authenticator being a web page served by the bank is itself a
+trust assumption worth stating.
+
+\paragraph{Enrolment and other out-of-scope items.}
+Enrolment assumes a clean, trust-on-first-use environment, and re-enrolment in
+the demo requires wiping the database; a real system needs an out-of-band
+recovery process. Push notifications, native apps, WebAuthn/SPC, multiple devices
+per user, and CSRF defences beyond \texttt{SameSite=Lax} are out of scope.
+
+\subsection{Positioning}
+None of the four mechanisms is novel (\cref{sec:background}); transaction binding
+and WYSIWYS are long established and, in the EU, mandated as dynamic
+linking~\cite{eu2018389}. The value of this work is the controlled comparison on
+one code base and the blind-signing experiment that isolates the display.
+Regulatory context for Vietnam (Decision 2345/Q\DJ-NHNN and any instrument that
+supersedes it) should be cited only after checking the currently effective text.

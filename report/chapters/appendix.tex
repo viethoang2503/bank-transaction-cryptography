@@ -1,0 +1,78 @@
+\section{Reproducing the results}\label{app:repro}
+The repository is a single project. With Python~3.11+ and Node~20+:
+\begin{lstlisting}[language=bash]
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+make test        # Python unit/integration tests
+make test-js     # authenticator crypto vs shared/vectors.json
+make eval        # scenarios + brute-force + benchmarks -> results/
+\end{lstlisting}
+Every table and figure in this report maps to a file under \texttt{results/}:
+
+\begin{table}[htbp]
+\centering\small
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+Report element & Source file \\
+\midrule
+\Cref{tab:scenarios} (T5)     & \texttt{results/scenarios.csv} / \texttt{scenarios.tex} \\
+\Cref{tab:goalsummary} (T6)   & derived from \texttt{results/scenarios.csv} / \texttt{goals.tex} \\
+\Cref{tab:bruteforce}, \cref{fig:bruteforce} & \texttt{results/bruteforce.csv} / \texttt{bruteforce.pdf} \\
+\Cref{tab:bench}, \cref{fig:bench} & \texttt{results/bench.csv} / \texttt{bench.pdf} \\
+\Cref{tab:phone} (T8)         & \texttt{results/phone\_bench.csv} \\
+\Cref{tab:sizes}              & \texttt{results/sizes.csv} \\
+\Cref{fig:mitb} (F4)          & \texttt{results/screens/*.png} \\
+Host environment             & \texttt{results/bench\_env.json} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Live man-in-the-browser demo}\label{app:mitb}
+The screenshots in \cref{fig:mitb} were produced by running the attacker addon in
+a proxy between a compromised browser and the server:
+\begin{lstlisting}[language=bash]
+pip install -e ".[attack]"            # mitmproxy into the venv (has segno)
+make run MODE=sig                     # terminal 1
+.venv/bin/mitmdump -s attacker/mitb_addon.py \
+    --listen-port 8080 --ssl-insecure # terminal 2
+# victim browser: proxy 127.0.0.1:8080, trust the mitmproxy CA (http://mitm.it)
+# phone: connects to the server directly (not through the proxy)
+\end{lstlisting}
+Setting \texttt{MITB\_FORGE\_QR=1} also forges the QR to show the intended
+recipient (scenario S4); the phone is then deceived, but the signature no longer
+matches the transaction the server holds, so the bank rejects it.
+
+\section{Demo accounts}\label{app:accounts}
+\begin{table}[htbp]
+\centering\small
+\begin{tabular}{@{}lllr@{}}
+\toprule
+Username & Account & Name & Balance (VND) \\
+\midrule
+alice   & 0011223344 & NGUYEN VAN A & 100{,}000{,}000 \\
+bob     & 0123456789 & TRAN THI B   & 5{,}000{,}000 \\
+mallory & 0999888777 & LE VAN M     & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+Passwords are hashed with scrypt ($n=2^{14}, r=8, p=1$). The symmetric keys are
+stored in plaintext \emph{on purpose}, to make scenario S10 real; a production
+system must use an HSM.
+
+\section{Contribution table}\label{app:contrib}
+% Fill in per member before submission.
+\begin{table}[htbp]
+\centering\small
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+Member & Contribution \\
+\midrule
+MEMBER 1 & \ldots \\
+MEMBER 2 & \ldots \\
+MEMBER 3 & \ldots \\
+MEMBER 4 & \ldots \\
+MEMBER 5 & \ldots \\
+MEMBER 6 & \ldots \\
+\bottomrule
+\end{tabularx}
+\end{table}

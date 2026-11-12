@@ -1,0 +1,178 @@
+\section{System Design}\label{sec:design}
+
+\subsection{Components and trust boundaries}
+\Cref{fig:arch} shows the components and which side of the trust boundary each
+one is on. The victim's PC (browser, and the MitB) is untrusted; the phone
+authenticator and the bank server are trusted. The cryptographic core
+(\texttt{tba\_core}) is shared by the server and, through cross-checked test
+vectors, by the phone; the evaluation harness drives the same core and the
+server in process.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  font=\small,
+  box/.style={draw,rounded corners,align=center,minimum height=8mm,inner sep=3pt},
+  trusted/.style={box,fill=green!8},
+  untrusted/.style={box,fill=red!8},
+  neutral/.style={box,fill=blue!6},
+  >=Latex]
+  % untrusted PC
+  \node[untrusted] (br) {Browser\\(bank pages)};
+  \node[untrusted,below=6mm of br] (mitb) {MitB\\\texttt{mitb\_addon.py}};
+  % server
+  \node[trusted,right=40mm of br] (web) {\texttt{server/app.py}\\routes + templates};
+  \node[trusted,below=6mm of web] (ver) {\texttt{verify.py},\\\texttt{transfers.py},\\\texttt{auth.py}};
+  \node[trusted,below=6mm of ver] (db) {SQLite};
+  % phone
+  \node[trusted,above=12mm of web] (app) {Phone authenticator\\Web Crypto + IndexedDB};
+  % core / eval
+  \node[neutral,right=22mm of ver] (core) {\texttt{tba\_core}\\encoding, totp,\\hmac\_otp, signature};
+  \node[neutral,below=6mm of core] (eval) {\texttt{evaluation}\\harness, VirtualPhone,\\scenarios, bench};
+  % edges
+  \draw[->] (br) -- node[left,font=\scriptsize]{HTTPS} (mitb);
+  \draw[->] (mitb.east) -- node[below,font=\scriptsize]{HTTPS} (web.west|-mitb.east);
+  \draw[->] (app) -- node[right,font=\scriptsize]{HTTPS} (web);
+  \draw[->,dashed] (app.west) to[bend right=20] node[left,font=\scriptsize]{QR on screen} (br.north);
+  \draw[->] (web) -- (ver);
+  \draw[->] (ver) -- (db);
+  \draw[->] (ver) -- (core);
+  \draw[->] (eval) -- (core);
+  \draw[->] (eval.north) to[bend right=12] node[right,font=\scriptsize]{TestClient} (web.south);
+\end{tikzpicture}
+\caption{Architecture and trust boundaries (F1). Green: trusted; red: untrusted;
+blue: test/verification code. The QR code is the only channel from the
+untrusted browser to the trusted phone, and the phone talks to the server on its
+own HTTPS channel.}
+\label{fig:arch}
+\end{figure}
+
+\subsection{Transaction encoding}
+A transaction is a fixed JSON object; every field is validated identically in
+Python and in JavaScript (\cref{tab:txfields}). The \emph{canonical} form is
+\texttt{json.dumps(tx, sort\_keys=True, separators=(",",":"), ensure\_ascii=True)}
+encoded as ASCII. Parsing is strict: duplicate keys, floating-point numbers,
+\texttt{NaN}/\texttt{Infinity}, non-ASCII bytes, and any string that does not
+re-serialise to the identical bytes are rejected. The transaction QR payload is
+\texttt{"tba1:"} followed by the base64url of the canonical bytes; the enrolment
+QR payload is \texttt{"tbaenroll1:"} followed by a token. The server always
+verifies against the canonical transaction stored in \emph{its own} database,
+never a transaction sent by the client.
+
+\begin{table}[htbp]
+\centering
+\caption{Transaction fields and their constraints.}
+\label{tab:txfields}
+\small
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+Field & Constraint \\
+\midrule
+\texttt{v}        & integer, equal to 1 \\
+\texttt{tx\_id}   & lower-case UUID \texttt{[0-9a-f]\{8\}-...-[0-9a-f]\{12\}} \\
+\texttt{from}, \texttt{to} & \texttt{[0-9]\{6,20\}} \\
+\texttt{to\_name} & \texttt{[A-Z0-9 ]\{1,64\}} \\
+\texttt{amount}   & integer (not bool), $1 \le \texttt{amount} \le 2^{53}-1$ \\
+\texttt{currency} & \texttt{[A-Z]\{3\}} \\
+\texttt{nonce}    & 16 random bytes, base64url without padding, exactly 22 chars \\
+\texttt{exp}      & integer, equal to creation time $+\,120$ seconds \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{The four modes}
+\Cref{tab:crypto} gives, for each mode, what the phone computes and what the
+server checks. Each device has its own $K_{\text{totp}}$ (20 bytes) and
+$K_{\text{hmac}}$ (32 bytes); the ECDSA key pair is generated on the phone. The
+domain-separation tags (\texttt{"TBA-HMAC-v1"}, \texttt{"TBA-SIG-v1"}), joined to
+the canonical bytes with a \texttt{0x00} byte, stop a code or signature for one
+purpose being reused for another.
+
+\begin{table}[htbp]
+\centering
+\caption{Cryptography of each mode (T4).}
+\label{tab:crypto}
+\small
+\begin{tabularx}{\linewidth}{@{}lXX@{}}
+\toprule
+Mode & Phone computes & Server checks \\
+\midrule
+\texttt{baseline} & $\mathrm{HOTP}(K_{\text{totp}},\lfloor t/30\rfloor)$, HMAC-SHA1, 6 digits & window $\pm1$ step; reject step $\le$ last used step \\
+\texttt{hmac} & $\mathrm{DT}(\mathrm{HMAC\text{-}SHA256}(K_{\text{hmac}}, \text{tag}\,\|\,\texttt{0x00}\,\|\,\mathrm{canon}(tx)))$, 8 digits & \texttt{hmac.compare\_digest} \\
+\texttt{sig} & $\mathrm{ECDSA\text{-}P256\text{-}SHA256}(sk, \text{tag}\,\|\,\texttt{0x00}\,\|\,\mathrm{canon}(tx))$, raw 64 bytes & convert to DER, verify with public key \\
+\texttt{sig\_blind} & same as \texttt{sig} & same as \texttt{sig} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Device enrolment}
+Enrolment (\cref{fig:enroll}) establishes one device per user. Crucially, once a
+device exists the server \emph{refuses} to enrol another from a web session
+alone: \texttt{GET /enroll} returns 409 and issues no token. Otherwise an
+attacker with only a session (A1, or a stolen password) could enrol their own
+key and approve every transaction, in every mode. In the demo, re-enrolment
+requires wiping the database (\texttt{make reset}); a real system needs an
+out-of-band process (\cref{sec:discussion}).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\small,>=Latex]
+  \def\yl{0}        % top
+  \def\yb{-5.4}     % bottom
+  \foreach \x/\name in {0/User, 3.2/Browser, 7.4/Server, 11.0/Phone}{
+    \node[font=\small\bfseries] at (\x,0.3) {\name};
+    \draw[gray] (\x,\yl) -- (\x,\yb);
+  }
+  \tikzset{msg/.style={->,shorten >=1pt}}
+  \draw[msg] (0,-0.5) -- node[above,font=\scriptsize]{login, open /enroll} (3.2,-0.5);
+  \draw[msg] (3.2,-1.1) -- node[above,font=\scriptsize]{GET /enroll} (7.4,-1.1);
+  \node[align=center,font=\scriptsize,fill=yellow!20,draw,rounded corners] at (7.4,-1.8)
+        {device exists $\Rightarrow$ 409, no token};
+  \draw[msg] (7.4,-2.5) -- node[above,font=\scriptsize]{QR \texttt{"tbaenroll1:"+token}} (3.2,-2.5);
+  \draw[msg,dashed] (3.2,-3.0) -- node[above,font=\scriptsize]{scan QR} (11.0,-3.0);
+  \node[align=center,font=\scriptsize,fill=blue!8,draw,rounded corners] at (11.0,-3.6)
+        {generate P-256,\\non-extractable};
+  \draw[msg] (11.0,-4.2) -- node[above,font=\scriptsize]{POST /api/device/enroll \{token, public\_key\}} (7.4,-4.2);
+  \draw[msg] (7.4,-4.9) -- node[above,font=\scriptsize]{\{device\_id, k\_totp, k\_hmac, mode\}} (11.0,-4.9);
+\end{tikzpicture}
+\caption{Device enrolment (F2). The HMAC keys are sent in the clear over HTTPS
+and stored by the phone as non-extractable keys in IndexedDB.}
+\label{fig:enroll}
+\end{figure}
+
+\subsection{Confirmation under a man-in-the-browser}
+\Cref{fig:confirm} shows what happens to a transfer when the browser is
+compromised. The MitB rewrites the recipient to the attacker before the request
+reaches the server, and masks the returned confirmation page so the browser
+still shows the intended recipient. The transaction QR, however, encodes the
+transaction the server actually holds, so the phone displays the \emph{true}
+recipient. In \texttt{hmac} and \texttt{sig} an attentive user sees the mismatch
+and rejects; in \texttt{sig\_blind} the phone shows nothing, so the user cannot
+notice. This is the mechanism measured in \cref{sec:eval} and shown in the
+screenshots of \cref{fig:mitb}.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\small,>=Latex]
+  \foreach \x/\name in {0/User, 3.0/Browser, 6.0/MitB, 9.0/Server, 12.0/Phone}{
+    \node[font=\small\bfseries] at (\x,0.3) {\name};
+    \draw[gray] (\x,0) -- (\x,-5.6);
+  }
+  \tikzset{msg/.style={->,shorten >=1pt}}
+  \draw[msg] (0,-0.5) -- node[above,font=\scriptsize]{send 1M to A} (3.0,-0.5);
+  \draw[msg] (3.0,-1.0) -- node[above,font=\scriptsize]{POST /transfer to=A} (6.0,-1.0);
+  \draw[msg] (6.0,-1.5) -- node[above,font=\scriptsize]{\textbf{to=B (attacker)}} (9.0,-1.5);
+  \draw[msg] (9.0,-2.2) -- node[above,font=\scriptsize]{confirm page (tx for B)} (6.0,-2.2);
+  \node[align=center,font=\scriptsize,fill=red!10,draw,rounded corners] at (6.0,-2.9)
+        {mask HTML:\\show A to user};
+  \draw[msg] (6.0,-3.5) -- node[above,font=\scriptsize]{page shows A} (3.0,-3.5);
+  \draw[msg,dashed] (3.0,-4.0) -- node[above,font=\scriptsize]{scan QR (tx for B)} (12.0,-4.0);
+  \node[align=center,font=\scriptsize,fill=green!10,draw,rounded corners] at (12.0,-4.7)
+        {phone shows \textbf{B}\\(the truth)};
+  \draw[msg] (12.0,-5.3) -- node[above,font=\scriptsize]{attentive user: Reject (hmac/sig)} (9.0,-5.3);
+\end{tikzpicture}
+\caption{Confirmation under MitB (F3). The browser is deceived, but the phone
+reads the transaction the server holds, so \texttt{hmac}/\texttt{sig} expose the
+swap. In \texttt{sig\_blind} the phone shows nothing and the user approves.}
+\label{fig:confirm}
+\end{figure}

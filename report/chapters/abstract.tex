@@ -1,0 +1,36 @@
+\begin{abstract}
+\noindent
+Online banking runs on the customer's own computer, which malware can fully
+control. A man-in-the-browser (MitB) Trojan, or an equivalent real-time
+phishing proxy, can silently change the recipient or the amount of a transfer
+after the user has typed it, while the screen still shows the intended details.
+A one-time password that is not tied to the transaction does not stop this
+attack, because the stolen code authorises whatever transaction the server
+holds.
+
+This project implements a small but complete demo bank and four interchangeable
+transaction-authentication modes on top of it: \texttt{baseline} (a plain
+time-based OTP), \texttt{hmac} (an 8-digit code computed over the exact
+transaction with HMAC-SHA256, in the style of OCRA), \texttt{sig} (an ECDSA
+P-256 signature over the exact transaction), and \texttt{sig\_blind} (the same
+signature, but the phone shows the user nothing). Transaction binding is not a
+new idea; the contribution of this report is a \emph{controlled comparison} of
+the four modes on one code base, with the blind-signing experiment isolating
+the role of the trusted display from the role of the cryptography.
+
+We evaluate the four modes against a threat model of seven attacker
+capabilities and seven security goals, using an automated harness that drives a
+virtual phone and a simulated MitB across thirteen scenarios in all four modes
+($56$ cells), plus a live MitB demonstration through \texttt{mitmproxy}, an
+online-guessing experiment, and micro-benchmarks. Every result in the report is
+produced by the project's \texttt{make eval} target. The measured matrix
+confirms that transaction binding (\texttt{hmac}, \texttt{sig}) blocks recipient
+and amount tampering that \texttt{baseline} does not, that asymmetric signatures
+additionally survive a server database leak and yield third-party--verifiable
+evidence, and that \texttt{sig\_blind} --- strong cryptography with no trusted
+display --- fails exactly the attacks an attentive user would otherwise catch.
+The practical cost is small: an iPhone signs a transaction in well under a
+millisecond. We also state clearly where the guarantees stop: the per-transaction
+guessing limit, the gap between ``verifiable evidence'' and non-repudiation, and
+the idealised attentive-user model.
+\end{abstract}

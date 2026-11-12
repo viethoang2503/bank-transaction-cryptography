@@ -1,0 +1,85 @@
+% ============================================================================
+%  Transaction-Bound Authentication for Online Banking
+%  Implementation and Security Evaluation
+%
+%  Mid-term project report -- Introduction to Cryptography (USTH)
+%
+%  HOW TO BUILD ON OVERLEAF
+%  1. Upload the whole `report/` folder (it is self-contained: figures are in
+%     report/figures/, tables are embedded, diagrams are drawn with TikZ).
+%  2. Set the compiler to pdfLaTeX and the main document to main.tex.
+%  3. Run twice so the table of contents and cross-references resolve.
+%
+%  Every number in this report comes from the project's own `results/` files
+%  (produced by `make eval`); see the appendix for the exact mapping.
+% ============================================================================
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype}
+\usepackage{graphicx,booktabs,tabularx,amsmath,amssymb,pifont,xcolor}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric}
+\usepackage[hidelinks]{hyperref}
+\usepackage{cleveref}
+
+% Marks used by the generated results tables (results/scenarios.tex, goals.tex).
+\newcommand{\cmark}{\textcolor{green!50!black}{\ding{51}}}
+\newcommand{\xmark}{\textcolor{red!70!black}{\ding{55}}}
+
+\lstset{basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,
+        columns=fullflexible,keepspaces=true,showstringspaces=false}
+
+\input{members}
+
+\title{Transaction-Bound Authentication for Online Banking:\\ Implementation and Security Evaluation}
+
+\begin{document}
+
+% ------------------------------------------------------------------ cover ----
+\begin{titlepage}
+  \centering
+  {\large \university\par \department\par}
+  \vspace{1.5cm}
+  {\large \course\ --- Mid-term Project Report\par}
+  \vspace{1cm}
+  {\LARGE\bfseries Transaction-Bound Authentication for Online Banking:\\[2mm]
+   Implementation and Security Evaluation\par}
+  \vspace{1.5cm}
+  {\large \groupname\par}
+  \vspace{0.8cm}
+  \begin{tabular}{llc}
+    \toprule
+    \textbf{Full name} & \textbf{Student ID} & \textbf{Role}\\
+    \midrule
+    \memberrows
+    \bottomrule
+  \end{tabular}
+  \vfill
+  Lecturer: \lecturer\par
+  \submissiondate
+\end{titlepage}
+
+\input{chapters/abstract}
+\tableofcontents
+\newpage
+
+\input{chapters/introduction}
+\input{chapters/background}
+\input{chapters/threat_model}
+\input{chapters/design}
+\input{chapters/implementation}
+\input{chapters/evaluation}
+\input{chapters/performance}
+\input{chapters/discussion}
+\input{chapters/conclusion}
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\appendix
+\input{chapters/appendix}
+
+\end{document}

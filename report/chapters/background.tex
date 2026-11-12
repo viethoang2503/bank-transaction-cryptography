@@ -1,0 +1,79 @@
+\section{Background and Related Work}\label{sec:background}
+
+\subsection{Man-in-the-browser and real-time phishing}
+A man-in-the-browser Trojan sits inside the victim's browser and intercepts the
+calls between the user interface and the network, so it sees the transaction the
+user intends and can substitute a different one before it reaches the bank,
+while keeping the displayed page unchanged. A real-time phishing proxy achieves
+the same position from the network side: the victim interacts with an
+attacker-controlled copy of the bank site, and the attacker relays and rewrites
+the traffic. Because both end up between the user's intent and the bank's record
+of the transaction, we treat them as one capability in our threat model
+(\cref{sec:threat}).
+
+\subsection{Transaction binding and the trusted display}
+The idea of binding the authorisation to the specific transaction, and of
+showing the transaction on a trusted device so the user signs what they see
+(WYSIWYS), is well established in both research and deployment. Hiltgen,
+Kramp and Weigold surveyed secure internet-banking authentication and argued for
+transaction-specific confirmation~\cite{hiltgen2006}; the Zurich Trusted
+Information Channel (ZTIC) realised a trusted device that displays and confirms
+transaction data~\cite{ztic2008}. In deployment, chipTAN and photoTAN schemes
+derive a transaction code from the transaction data, and the challenge-response
+standard OCRA includes a signature/transaction mode (RFC~6287, signature
+mode)~\cite{rfc6287}. Regulation has made the principle mandatory for European
+payment service providers: the ``dynamic linking'' requirement of Commission
+Delegated Regulation (EU)~2018/389, Article~5, requires the authentication code
+to be specific to the amount and the payee~\cite{eu2018389}. More recent web
+standards, such as W3C Secure Payment Confirmation, carry transaction details
+into the signed authenticator assertion~\cite{w3cspc}.\footnote{W3C Secure
+Payment Confirmation is, at the time of writing, a Candidate Recommendation
+Draft, not a Recommendation; cite its exact status when used.}
+
+Against this background, the four modes in this report are not new designs.
+\texttt{baseline} is RFC~4226/6238 HOTP/TOTP~\cite{rfc4226,rfc6238};
+\texttt{hmac} is an OCRA-\emph{style} code (it uses HMAC-SHA256 over a canonical
+transaction with a domain-separation tag, but it is \emph{not} standards-exact
+OCRA: there is no OCRASuite string and no RFC~6287 \texttt{DataInput} layout);
+\texttt{sig}/\texttt{sig\_blind} apply an ECDSA~P-256 signature (FIPS~186-5) over
+the same canonical transaction. The contribution is the controlled comparison
+and the blind-signing experiment, not the mechanisms.
+
+\subsection{Do users actually check?}
+WYSIWYS only helps if the user reads the trusted display and notices a mismatch.
+This assumption is known to be optimistic. AlZomai, AlFayyadh, J\o sang and
+McCullagh ran a simulated-bank user study of transaction
+authorisation~\cite{alzomai2008}, and Haupert and Gabert surveyed real banking
+customers on where they look for the signed transaction
+details~\cite{haupert2019}. We use these works to bound the interpretation of
+our attentive-user results (\cref{sec:eval,sec:discussion}); we do not reproduce
+their specific detection rates here, because those must be read from the
+original papers before quoting.\footnote{A preliminary review obtained only
+press-release figures (reported as 21\% of obvious attacks and 61\% of subtle
+attacks succeeding); these are not cited as facts and must be checked against
+the original publications before inclusion.}
+
+\subsection{Comparison with existing solutions}
+\Cref{tab:compare} positions the four implemented modes against representative
+existing approaches on the properties that matter for MitB defence. It is a
+qualitative map, not a claim of novelty.
+
+\begin{table}[htbp]
+\centering
+\caption{Where the four modes sit among transaction-authentication approaches.}
+\label{tab:compare}
+\small
+\begin{tabularx}{\linewidth}{@{}lXccc@{}}
+\toprule
+Approach & Binds code to transaction? & Trusted display & Asymmetric & Standards \\
+\midrule
+Plain OTP / TOTP (\texttt{baseline})   & No  & No  & No  & RFC 4226/6238 \\
+chipTAN / photoTAN                     & Yes & Yes & No  & vendor \\
+OCRA signature mode                    & Yes & Yes & No  & RFC 6287 \\
+HMAC transaction code (\texttt{hmac})  & Yes & Yes & No  & OCRA-style \\
+Signature (\texttt{sig})               & Yes & Yes & Yes & FIPS 186-5 \\
+Signature, no display (\texttt{sig\_blind}) & Yes & No & Yes & FIPS 186-5 \\
+WebAuthn / W3C SPC                     & Yes (SPC) & Yes & Yes & W3C \\
+\bottomrule
+\end{tabularx}
+\end{table}
