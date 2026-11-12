@@ -10,36 +10,38 @@ server in process.
 
 \begin{figure}[htbp]
 \centering
+\resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[
   font=\small,
-  box/.style={draw,rounded corners,align=center,minimum height=8mm,inner sep=3pt},
+  box/.style={draw,rounded corners,align=center,minimum height=9mm,inner sep=4pt},
   trusted/.style={box,fill=green!8},
   untrusted/.style={box,fill=red!8},
   neutral/.style={box,fill=blue!6},
-  >=Latex]
+  elab/.style={font=\scriptsize,fill=white,inner sep=1.5pt},
+  >=Latex,node distance=10mm]
   % untrusted PC
   \node[untrusted] (br) {Browser\\(bank pages)};
-  \node[untrusted,below=6mm of br] (mitb) {MitB\\\texttt{mitb\_addon.py}};
+  \node[untrusted,below=8mm of br] (mitb) {MitB\\\texttt{mitb\_addon.py}};
   % server
-  \node[trusted,right=40mm of br] (web) {\texttt{server/app.py}\\routes + templates};
-  \node[trusted,below=6mm of web] (ver) {\texttt{verify.py},\\\texttt{transfers.py},\\\texttt{auth.py}};
-  \node[trusted,below=6mm of ver] (db) {SQLite};
+  \node[trusted,right=46mm of br] (web) {\texttt{server/app.py}\\routes + templates};
+  \node[trusted,below=8mm of web] (ver) {\texttt{verify.py},\\\texttt{transfers.py},\\\texttt{auth.py}};
+  \node[trusted,below=8mm of ver] (db) {SQLite};
   % phone
-  \node[trusted,above=12mm of web] (app) {Phone authenticator\\Web Crypto + IndexedDB};
+  \node[trusted,above=14mm of web] (app) {Phone authenticator\\Web Crypto + IndexedDB};
   % core / eval
-  \node[neutral,right=22mm of ver] (core) {\texttt{tba\_core}\\encoding, totp,\\hmac\_otp, signature};
-  \node[neutral,below=6mm of core] (eval) {\texttt{evaluation}\\harness, VirtualPhone,\\scenarios, bench};
+  \node[neutral,right=28mm of ver] (core) {\texttt{tba\_core}\\encoding, totp,\\hmac\_otp, signature};
+  \node[neutral,below=8mm of core] (eval) {\texttt{evaluation}\\harness, VirtualPhone,\\scenarios, bench};
   % edges
-  \draw[->] (br) -- node[left,font=\scriptsize]{HTTPS} (mitb);
-  \draw[->] (mitb.east) -- node[below,font=\scriptsize]{HTTPS} (web.west|-mitb.east);
-  \draw[->] (app) -- node[right,font=\scriptsize]{HTTPS} (web);
-  \draw[->,dashed] (app.west) to[bend right=20] node[left,font=\scriptsize]{QR on screen} (br.north);
+  \draw[->] (br) -- node[elab]{HTTPS} (mitb);
+  \draw[->] (mitb.east) -- node[elab,below]{HTTPS} (web.west|-mitb.east);
+  \draw[->] (app) -- node[elab]{HTTPS} (web);
+  \draw[->,dashed] (app.west) to[bend right=20] node[elab,left]{QR on screen} (br.north);
   \draw[->] (web) -- (ver);
   \draw[->] (ver) -- (db);
   \draw[->] (ver) -- (core);
   \draw[->] (eval) -- (core);
-  \draw[->] (eval.north) to[bend right=12] node[right,font=\scriptsize]{TestClient} (web.south);
-\end{tikzpicture}
+  \draw[->] (eval.north) to[bend right=12] node[elab,right]{TestClient} (web.south);
+\end{tikzpicture}}
 \caption{Architecture and trust boundaries (F1). Green: trusted; red: untrusted;
 blue: test/verification code. The QR code is the only channel from the
 untrusted browser to the trusted phone, and the phone talks to the server on its
@@ -116,25 +118,26 @@ out-of-band process (\cref{sec:discussion}).
 
 \begin{figure}[htbp]
 \centering
-\begin{tikzpicture}[font=\small,>=Latex]
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[font=\small,>=Latex,
+  msg/.style={->,shorten >=1pt},
+  lab/.style={above,font=\scriptsize,fill=white,inner sep=1.5pt,align=center,midway},
+  note/.style={align=center,font=\scriptsize,draw,rounded corners,inner sep=3pt}]
   \def\yl{0}        % top
-  \def\yb{-5.4}     % bottom
-  \foreach \x/\name in {0/User, 3.2/Browser, 7.4/Server, 11.0/Phone}{
-    \node[font=\small\bfseries] at (\x,0.3) {\name};
+  \def\yb{-6.6}     % bottom
+  \foreach \x/\name in {0/User, 3.4/Browser, 8.0/Server, 12.0/Phone}{
+    \node[font=\small\bfseries] at (\x,0.35) {\name};
     \draw[gray] (\x,\yl) -- (\x,\yb);
   }
-  \tikzset{msg/.style={->,shorten >=1pt}}
-  \draw[msg] (0,-0.5) -- node[above,font=\scriptsize]{login, open /enroll} (3.2,-0.5);
-  \draw[msg] (3.2,-1.1) -- node[above,font=\scriptsize]{GET /enroll} (7.4,-1.1);
-  \node[align=center,font=\scriptsize,fill=yellow!20,draw,rounded corners] at (7.4,-1.8)
-        {device exists $\Rightarrow$ 409, no token};
-  \draw[msg] (7.4,-2.5) -- node[above,font=\scriptsize]{QR \texttt{"tbaenroll1:"+token}} (3.2,-2.5);
-  \draw[msg,dashed] (3.2,-3.0) -- node[above,font=\scriptsize]{scan QR} (11.0,-3.0);
-  \node[align=center,font=\scriptsize,fill=blue!8,draw,rounded corners] at (11.0,-3.6)
-        {generate P-256,\\non-extractable};
-  \draw[msg] (11.0,-4.2) -- node[above,font=\scriptsize]{POST /api/device/enroll \{token, public\_key\}} (7.4,-4.2);
-  \draw[msg] (7.4,-4.9) -- node[above,font=\scriptsize]{\{device\_id, k\_totp, k\_hmac, mode\}} (11.0,-4.9);
-\end{tikzpicture}
+  \draw[msg] (0,-0.6) -- node[lab]{login,\\open /enroll} (3.4,-0.6);
+  \draw[msg] (3.4,-1.5) -- node[lab]{GET /enroll} (8.0,-1.5);
+  \node[note,fill=yellow!20] at (8.0,-2.2) {if device exists:\\409, no token};
+  \draw[msg] (8.0,-3.0) -- node[lab]{QR \texttt{"tbaenroll1:"}\\\texttt{+ token}} (3.4,-3.0);
+  \draw[msg,dashed] (3.4,-3.9) -- node[lab]{scan QR} (12.0,-3.9);
+  \node[note,fill=blue!8,anchor=west] at (12.3,-4.6) {generate P-256,\\non-extractable};
+  \draw[msg] (12.0,-5.4) -- node[lab]{POST /api/device/enroll\\\{token, public\_key\}} (8.0,-5.4);
+  \draw[msg] (8.0,-6.3) -- node[lab]{\{device\_id, k\_totp,\\k\_hmac, mode\}} (12.0,-6.3);
+\end{tikzpicture}}
 \caption{Device enrolment (F2). The HMAC keys are sent in the clear over HTTPS
 and stored by the phone as non-extractable keys in IndexedDB.}
 \label{fig:enroll}
@@ -153,24 +156,25 @@ screenshots of \cref{fig:mitb}.
 
 \begin{figure}[htbp]
 \centering
-\begin{tikzpicture}[font=\small,>=Latex]
-  \foreach \x/\name in {0/User, 3.0/Browser, 6.0/MitB, 9.0/Server, 12.0/Phone}{
-    \node[font=\small\bfseries] at (\x,0.3) {\name};
-    \draw[gray] (\x,0) -- (\x,-5.6);
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[font=\small,>=Latex,
+  msg/.style={->,shorten >=1pt},
+  lab/.style={above,font=\scriptsize,fill=white,inner sep=1.5pt,align=center,midway},
+  note/.style={align=center,font=\scriptsize,draw,rounded corners,inner sep=3pt}]
+  \foreach \x/\name in {0/User, 3.2/Browser, 6.4/MitB, 9.6/Server, 12.8/Phone}{
+    \node[font=\small\bfseries] at (\x,0.35) {\name};
+    \draw[gray] (\x,0) -- (\x,-6.8);
   }
-  \tikzset{msg/.style={->,shorten >=1pt}}
-  \draw[msg] (0,-0.5) -- node[above,font=\scriptsize]{send 1M to A} (3.0,-0.5);
-  \draw[msg] (3.0,-1.0) -- node[above,font=\scriptsize]{POST /transfer to=A} (6.0,-1.0);
-  \draw[msg] (6.0,-1.5) -- node[above,font=\scriptsize]{\textbf{to=B (attacker)}} (9.0,-1.5);
-  \draw[msg] (9.0,-2.2) -- node[above,font=\scriptsize]{confirm page (tx for B)} (6.0,-2.2);
-  \node[align=center,font=\scriptsize,fill=red!10,draw,rounded corners] at (6.0,-2.9)
-        {mask HTML:\\show A to user};
-  \draw[msg] (6.0,-3.5) -- node[above,font=\scriptsize]{page shows A} (3.0,-3.5);
-  \draw[msg,dashed] (3.0,-4.0) -- node[above,font=\scriptsize]{scan QR (tx for B)} (12.0,-4.0);
-  \node[align=center,font=\scriptsize,fill=green!10,draw,rounded corners] at (12.0,-4.7)
-        {phone shows \textbf{B}\\(the truth)};
-  \draw[msg] (12.0,-5.3) -- node[above,font=\scriptsize]{attentive user: Reject (hmac/sig)} (9.0,-5.3);
-\end{tikzpicture}
+  \draw[msg] (0,-0.6) -- node[lab]{send 1M to A} (3.2,-0.6);
+  \draw[msg] (3.2,-1.4) -- node[lab]{POST /transfer\\to=A} (6.4,-1.4);
+  \draw[msg] (6.4,-2.2) -- node[lab]{\textbf{to=B}\\\textbf{(attacker)}} (9.6,-2.2);
+  \draw[msg] (9.6,-3.1) -- node[lab]{confirm page\\(tx for B)} (6.4,-3.1);
+  \node[note,fill=red!10] at (6.4,-3.9) {mask HTML:\\show A to user};
+  \draw[msg] (6.4,-4.7) -- node[lab]{page shows A} (3.2,-4.7);
+  \draw[msg,dashed] (3.2,-5.4) -- node[lab]{scan QR (tx for B)} (12.8,-5.4);
+  \node[note,fill=green!10,anchor=west] at (13.1,-6.1) {phone shows \textbf{B}\\(the truth)};
+  \draw[msg] (12.8,-6.7) -- node[lab]{attentive user:\\Reject (hmac/sig)} (9.6,-6.7);
+\end{tikzpicture}}
 \caption{Confirmation under MitB (F3). The browser is deceived, but the phone
 reads the transaction the server holds, so \texttt{hmac}/\texttt{sig} expose the
 swap. In \texttt{sig\_blind} the phone shows nothing and the user approves.}
