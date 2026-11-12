@@ -1,4 +1,5 @@
-PY ?= python
+# Use the project's virtualenv when it exists, so the targets work without activating it.
+PY ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python)
 MODE ?= sig
 .PHONY: test vectors cert run reset
 test:
@@ -10,7 +11,7 @@ cert:
 	scripts/dev_cert.sh
 
 run:
-	TBA_MODE=$(MODE) TBA_DB=tba-$(MODE).sqlite3 uvicorn server.main:app --host 0.0.0.0 --port 8443 --ssl-keyfile certs/key.pem --ssl-certfile certs/cert.pem
+	TBA_MODE=$(MODE) TBA_DB=tba-$(MODE).sqlite3 $(PY) -m uvicorn server.main:app --host 0.0.0.0 --port 8443 --ssl-keyfile certs/key.pem --ssl-certfile certs/cert.pem
 
 # Wipe one mode's demo bank (users, balances, enrolled device). The only way to re-enroll.
 reset:
