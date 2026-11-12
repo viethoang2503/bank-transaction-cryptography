@@ -161,16 +161,19 @@ async function bench() {
     tx_id: "3f2b8c1e-5a4d-4e7f-9b6a-1c2d3e4f5a6b", v: 1 };
   const n = 200;
   const samples = [];
+  const start = performance.now();
   for (let i = 0; i < n; i++) {
     const t0 = performance.now();
     await signTx(kp.privateKey, tx);
     samples.push(performance.now() - t0);
   }
+  // Browsers coarsen performance.now() (Safari: 1 ms), so single samples can read 0; the mean over the whole run is reliable.
+  const mean = (performance.now() - start) / n;
   samples.sort((a, b) => a - b);
   const median = samples[Math.floor(n / 2)];
   const p95 = samples[Math.floor(0.95 * (n - 1))];
   $("bench-result").textContent =
-    `ECDSA P-256 sign, n=${n}: median ${median.toFixed(2)} ms, p95 ${p95.toFixed(2)} ms. ${navigator.userAgent}`;
+    `ECDSA P-256 sign, n=${n}: mean ${mean.toFixed(3)} ms, median ${median.toFixed(2)} ms, p95 ${p95.toFixed(2)} ms. ${navigator.userAgent}`;
 }
 
 async function init() {

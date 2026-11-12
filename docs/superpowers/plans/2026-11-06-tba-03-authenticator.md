@@ -605,16 +605,19 @@ async function bench() {
     tx_id: "3f2b8c1e-5a4d-4e7f-9b6a-1c2d3e4f5a6b", v: 1 };
   const n = 200;
   const samples = [];
+  const start = performance.now();
   for (let i = 0; i < n; i++) {
     const t0 = performance.now();
     await signTx(kp.privateKey, tx);
     samples.push(performance.now() - t0);
   }
+  // Browsers coarsen performance.now() (Safari: 1 ms), so single samples can read 0; the mean over the whole run is reliable.
+  const mean = (performance.now() - start) / n;
   samples.sort((a, b) => a - b);
   const median = samples[Math.floor(n / 2)];
   const p95 = samples[Math.floor(0.95 * (n - 1))];
   $("bench-result").textContent =
-    `ECDSA P-256 sign, n=${n}: median ${median.toFixed(2)} ms, p95 ${p95.toFixed(2)} ms. ${navigator.userAgent}`;
+    `ECDSA P-256 sign, n=${n}: mean ${mean.toFixed(3)} ms, median ${median.toFixed(2)} ms, p95 ${p95.toFixed(2)} ms. ${navigator.userAgent}`;
 }
 
 async function init() {
@@ -678,13 +681,13 @@ git commit -m "feat(authenticator): phone UI with QR scanning, blind mode and si
 - [ ] **Step 2:** Ghi vào `results/phone_bench.csv`:
 
 ```csv
-device,browser,n,median_ms,p95_ms
-iPhone 13,Safari 18,200,<median>,<p95>
+device,browser,n,mean_ms,median_ms,p95_ms
+iPhone 13,Safari 18,200,<mean>,<median>,<p95>
 ```
 
 (mỗi dòng là một điện thoại; số liệu lấy từ màn hình kết quả)
 
-- [ ] **Step 3:** Report ghi chú: `performance.now()` bị giảm độ phân giải trên một số trình duyệt, nên các giá trị dưới 1 ms chỉ mang tính tương đối.
+- [ ] **Step 3:** Report ghi chú: `performance.now()` bị giảm độ phân giải trên một số trình duyệt, nên median và p95 dưới 1 ms chỉ mang tính tương đối (Safari iOS làm tròn về 1 ms, median có thể đọc là 0); dùng `mean_ms` (tổng thời gian chia n) làm số chính.
 - [ ] **Step 4: Commit**
 
 ```bash
