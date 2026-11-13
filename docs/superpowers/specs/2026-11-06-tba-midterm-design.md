@@ -2,7 +2,7 @@
 
 **Môn:** Introduction to Cryptography (USTH), midterm project
 **Tên đề (ghi đúng nguyên văn trên bìa):** *Transaction-Bound Authentication for Online Banking: Implementation and Security Evaluation*
-**Nhóm:** 6 thành viên, 10 ngày (ngày 1 = 07/11/2026, hạn nộp = 16/11/2026)
+**Nhóm:** 7 thành viên, 10 ngày (ngày 1 = 07/11/2026, hạn nộp = 16/11/2026)
 **Yêu cầu của giảng viên:** nộp report dạng PDF; trang bìa có tên đề, danh sách thành viên và mã sinh viên (kiểm tra kỹ danh sách); leader là người nộp.
 
 Kiến trúc chi tiết và sơ đồ: xem `docs/architecture.md`.
@@ -32,7 +32,7 @@ Xây một hệ thống ngân hàng demo có 4 chế độ xác thực giao dị
 | OTP | `hmac`: 8 chữ số; `baseline`: 6 chữ số; tối đa 3 lần thử mỗi giao dịch (áp dụng cho mọi chế độ) |
 | Tên người nhận | In hoa, không dấu, do server tra cứu |
 | Đăng ký thiết bị | Giả định môi trường sạch (trust-on-first-use) |
-| Usability | Chỉ 6 thành viên làm người thử, ghi rõ mẫu nhỏ |
+| Usability | Chỉ 7 thành viên làm người thử, ghi rõ mẫu nhỏ |
 | ProVerif | Tùy chọn, chỉ làm nếu dư thời gian |
 | Ngôn ngữ report và giao diện | Tiếng Anh (để ảnh chụp màn hình khớp với report) |
 | Report | LaTeX trên Overleaf, khoảng 19 trang nội dung chính + phụ lục |

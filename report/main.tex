@@ -21,6 +21,7 @@
 \usepackage{graphicx,booktabs,tabularx,amsmath,amssymb,pifont,xcolor}
 \usepackage{listings}
 \usepackage{tikz}
+\usepackage{float}
 \usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric}
 \usepackage[hidelinks]{hyperref}
 \usepackage{cleveref}
@@ -48,7 +49,7 @@
   {\LARGE\bfseries Transaction-Bound Authentication for Online Banking:\\[2mm]
    Implementation and Security Evaluation\par}
   \vspace{1.5cm}
-  {\large \groupname\par}
+  {\LARGE\bfseries \groupname\par}
   \vspace{0.8cm}
   \begin{tabular}{llc}
     \toprule
@@ -62,23 +63,12 @@
   \submissiondate
 \end{titlepage}
 
-\input{chapters/abstract}
-\tableofcontents
-\newpage
-
-\input{chapters/introduction}
-\input{chapters/background}
-\input{chapters/threat_model}
-\input{chapters/design}
-\input{chapters/implementation}
-\input{chapters/evaluation}
-\input{chapters/performance}
-\input{chapters/discussion}
-\input{chapters/conclusion}
+\input{chapters/body}
 
 \bibliographystyle{IEEEtran}
 \bibliography{refs}
 
+\clearpage
 \appendix
 \input{chapters/appendix}
 

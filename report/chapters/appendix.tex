@@ -1,3 +1,49 @@
+\section{Contribution table}\label{app:contrib}
+\begin{table}[H]
+\centering\small
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+Member & Contribution \\
+\midrule
+Bui Viet Hoang (Leader) & Project lead and principal contributor, owning the core and most critical parts: the system design, the transaction-binding protocol and key cryptographic decisions, the integration of all components, and the writing of the report; also the repository, build and submission. \\
+Nghiem Trong Quoc Anh & Cryptographic core (\texttt{tba\_core}): canonical encoding, TOTP, HMAC-OTP and ECDSA signing; micro-benchmarks and data sizes (Design and Implementation; cost measurements). \\
+Nguyen Khac Hung & Server (FastAPI): transfer and confirmation endpoints, verification, SQLite storage and device enrolment (Design and Implementation). \\
+Nguyen Ba Khoa & Phone authenticator web app: Web Crypto keys, QR scanning and IndexedDB; on-device signing benchmark (Design and Implementation; cost measurements). \\
+Vu Quang Huy & Red team: evaluation harness, attack scenarios S1--S13, the \texttt{mitmproxy} man-in-the-browser addon and the live demo screenshots (Security Evaluation). \\
+Nguyen Viet Hoang & Research and evaluation: background and threat model, the online-guessing experiment, and the result tables and figures (Introduction, Threat Model, Security Evaluation). \\
+Nguyen Duy Nam & Integration and regression testing across all four modes; the JavaScript crypto test vectors for the authenticator; the reproduction guide and documentation; running \texttt{make eval} and cross-checking every number against \texttt{results/}. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Confirmation flow under a man-in-the-browser}\label{app:confirm}
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[font=\small,>=Latex,
+  msg/.style={->,shorten >=1pt},
+  lab/.style={above,font=\scriptsize,fill=white,inner sep=1.5pt,align=center,midway},
+  note/.style={align=center,font=\scriptsize,draw,rounded corners,inner sep=3pt}]
+  \foreach \x/\name in {0/User, 3.2/Browser, 6.4/MitB, 9.6/Server, 12.8/Phone}{
+    \node[font=\small\bfseries] at (\x,0.35) {\name};
+    \draw[gray] (\x,0) -- (\x,-6.8);
+  }
+  \draw[msg] (0,-0.6) -- node[lab]{send 1M to A} (3.2,-0.6);
+  \draw[msg] (3.2,-1.4) -- node[lab]{POST /transfer\\to=A} (6.4,-1.4);
+  \draw[msg] (6.4,-2.2) -- node[lab]{\textbf{to=B}\\\textbf{(attacker)}} (9.6,-2.2);
+  \draw[msg] (9.6,-3.1) -- node[lab]{confirm page\\(tx for B)} (6.4,-3.1);
+  \node[note,fill=red!10] at (6.4,-3.9) {mask HTML:\\show A to user};
+  \draw[msg] (6.4,-4.7) -- node[lab]{page shows A} (3.2,-4.7);
+  \draw[msg,dashed] (3.2,-5.4) -- node[lab]{scan QR (tx for B)} (12.8,-5.4);
+  \node[note,fill=green!10,anchor=west] at (13.1,-6.1) {phone shows \textbf{B}\\(the truth)};
+  \draw[msg] (12.8,-6.7) -- node[lab]{attentive user:\\Reject (hmac/sig)} (9.6,-6.7);
+\end{tikzpicture}}
+\caption{Confirmation under MitB. The browser is deceived, but the phone
+reads the transaction the server holds, so \texttt{hmac}/\texttt{sig} expose the
+swap. In \texttt{sig\_blind} the phone shows nothing and the user approves.}
+\label{fig:confirm}
+\end{figure}
+
 \section{Reproducing the results}\label{app:repro}
 The repository is a single project. With Python~3.11+ and Node~20+:
 \begin{lstlisting}[language=bash]
@@ -7,25 +53,13 @@ make test        # Python unit/integration tests
 make test-js     # authenticator crypto vs shared/vectors.json
 make eval        # scenarios + brute-force + benchmarks -> results/
 \end{lstlisting}
-Every table and figure in this report maps to a file under \texttt{results/}:
-
-\begin{table}[htbp]
-\centering\small
-\begin{tabularx}{\linewidth}{@{}lX@{}}
-\toprule
-Report element & Source file \\
-\midrule
-\Cref{tab:scenarios} (T5)     & \texttt{results/scenarios.csv} / \texttt{scenarios.tex} \\
-\Cref{tab:goalsummary} (T6)   & derived from \texttt{results/scenarios.csv} / \texttt{goals.tex} \\
-\Cref{tab:bruteforce}, \cref{fig:bruteforce} & \texttt{results/bruteforce.csv} / \texttt{bruteforce.pdf} \\
-\Cref{tab:bench}, \cref{fig:bench} & \texttt{results/bench.csv} / \texttt{bench.pdf} \\
-\Cref{tab:phone} (T8)         & \texttt{results/phone\_bench.csv} \\
-\Cref{tab:sizes}              & \texttt{results/sizes.csv} \\
-\Cref{fig:mitb} (F4)          & \texttt{results/screens/*.png} \\
-Host environment             & \texttt{results/bench\_env.json} \\
-\bottomrule
-\end{tabularx}
-\end{table}
+All measured values come from files under \texttt{results/}:
+\texttt{scenarios.csv} (\cref{tab:scenarios}), \texttt{bruteforce.csv} (online
+guessing), \texttt{bench.csv}, \texttt{phone\_bench.csv} and \texttt{sizes.csv}
+(performance), \texttt{screens/*.png} (\cref{fig:mitb}) and
+\texttt{bench\_env.json} (host environment). The phone benchmarks and the
+live-demo screenshots are collected by hand; the rest is produced by
+\texttt{make eval}.
 
 \section{Live man-in-the-browser demo}\label{app:mitb}
 The screenshots in \cref{fig:mitb} were produced by running the attacker addon in
@@ -43,7 +77,7 @@ recipient (scenario S4); the phone is then deceived, but the signature no longer
 matches the transaction the server holds, so the bank rejects it.
 
 \section{Demo accounts}\label{app:accounts}
-\begin{table}[htbp]
+\begin{table}[H]
 \centering\small
 \begin{tabular}{@{}lllr@{}}
 \toprule
@@ -58,21 +92,3 @@ mallory & 0999888777 & LE VAN M     & 0 \\
 Passwords are hashed with scrypt ($n=2^{14}, r=8, p=1$). The symmetric keys are
 stored in plaintext \emph{on purpose}, to make scenario S10 real; a production
 system must use an HSM.
-
-\section{Contribution table}\label{app:contrib}
-% Fill in per member before submission.
-\begin{table}[htbp]
-\centering\small
-\begin{tabularx}{\linewidth}{@{}lX@{}}
-\toprule
-Member & Contribution \\
-\midrule
-MEMBER 1 & \ldots \\
-MEMBER 2 & \ldots \\
-MEMBER 3 & \ldots \\
-MEMBER 4 & \ldots \\
-MEMBER 5 & \ldots \\
-MEMBER 6 & \ldots \\
-\bottomrule
-\end{tabularx}
-\end{table}

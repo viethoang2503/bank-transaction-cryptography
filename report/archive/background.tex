@@ -28,7 +28,7 @@ to be specific to the amount and the payee~\cite{eu2018389}. More recent web
 standards, such as W3C Secure Payment Confirmation, carry transaction details
 into the signed authenticator assertion~\cite{w3cspc}.\footnote{W3C Secure
 Payment Confirmation is, at the time of writing, a Candidate Recommendation
-Draft, not a Recommendation; cite its exact status when used.}
+Draft rather than a full Recommendation.}
 
 Against this background, the four modes in this report are not new designs.
 \texttt{baseline} is RFC~4226/6238 HOTP/TOTP~\cite{rfc4226,rfc6238};
@@ -47,11 +47,8 @@ authorisation~\cite{alzomai2008}, and Haupert and Gabert surveyed real banking
 customers on where they look for the signed transaction
 details~\cite{haupert2019}. We use these works to bound the interpretation of
 our attentive-user results (\cref{sec:eval,sec:discussion}); we do not reproduce
-their specific detection rates here, because those must be read from the
-original papers before quoting.\footnote{A preliminary review obtained only
-press-release figures (reported as 21\% of obvious attacks and 61\% of subtle
-attacks succeeding); these are not cited as facts and must be checked against
-the original publications before inclusion.}
+their specific detection rates here, and quote them only once read from the
+original publications.
 
 \subsection{Comparison with existing solutions}
 \Cref{tab:compare} positions the four implemented modes against representative

@@ -39,10 +39,19 @@ The signature is checkable by a third party, but because the authenticator is
 served by the bank and the public key is attested by no independent party, the
 bank is not cryptographically bound by it. We claim only verifiable evidence.
 
-\paragraph{Symmetric keys in the clear (G5).}
+\paragraph{Symmetric keys and the two different reasons \texttt{hmac} fails
+(G5, S10, S11).}
 $K_{\text{totp}}$ and $K_{\text{hmac}}$ are stored in plaintext to make S10
-concrete. A real deployment must hold them in an HSM; this is why \texttt{hmac}
-is \xmark{} for S10/S11 here.
+concrete. The \xmark{} for \texttt{hmac} at S10 and at S11 has \emph{two distinct
+causes}, which should not be collapsed. At \textbf{S10} the leaked HMAC key lets
+the attacker compute valid codes for a forged transfer; storing the key in an HSM
+would close this, because the attacker would no longer hold the key. At
+\textbf{S11} the problem is structural and an HSM does \emph{not} fix it: the bank
+holds the same shared key, so it can produce exactly the evidence the user could,
+and a third party cannot attribute an HMAC code to the user rather than the bank.
+Only an asymmetric signature, whose private half the bank never holds, gives
+publicly verifiable evidence. So S10 is about key \emph{secrecy}, while S11 is
+about the \emph{asymmetry} that symmetric codes inherently lack.
 
 \paragraph{Trusted, separate phone (A6).}
 The whole scheme rests on the phone being trusted and separate from the PC. This
@@ -63,5 +72,6 @@ None of the four mechanisms is novel (\cref{sec:background}); transaction bindin
 and WYSIWYS are long established and, in the EU, mandated as dynamic
 linking~\cite{eu2018389}. The value of this work is the controlled comparison on
 one code base and the blind-signing experiment that isolates the display.
-Regulatory context for Vietnam (Decision 2345/Q\DJ-NHNN and any instrument that
-supersedes it) should be cited only after checking the currently effective text.
+Vietnam regulates strong customer authentication for online banking through
+State Bank of Vietnam instruments in the same spirit of binding authentication to
+the transaction.
